@@ -1,0 +1,54 @@
+# Publishes the product page (landing/) at the root of GitHub Pages and the rendered docs
+# (implementation plan, decision records) under /docs/. scripts/build-pages.ts assembles the site.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['landing/**', 'docs/**', 'scripts/build-pages.ts', '.github/workflows/pages.yml']
+  # Pull requests build the site (the check), only pushes to main deploy it.
+  pull_request:
+    paths: ['landing/**', 'docs/**', 'scripts/build-pages.ts', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/build-pages.ts
+      - name: Check the site layout
+        run: |
+          test -f _site/index.html && test -f _site/docs/index.html && test -f _site/docs/plan/index.html
+          test -f _site/assets/fonts/geist-latin.woff2 && test ! -e _site/README.md
+          # Self-contained: no external scripts, stylesheets or fonts on the product page.
+          if grep -Eq '<(script|link)[^>]+(src|href)="https?://' _site/index.html; then echo "external resource"; exit 1; fi
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

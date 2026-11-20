@@ -52,3 +52,4 @@ apps/agentbox/dist
 .agentbox-dev/
 .build/
 e2e/*/.out/
+_site/

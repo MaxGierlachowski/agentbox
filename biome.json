@@ -13,7 +13,9 @@
       "!**/out",
       "!**/dist",
       "!**/.turbo",
-      "!**/drizzle/meta"
+      "!**/drizzle/meta",
+      "!**/landing",
+      "!**/_site"
     ]
   },
   "formatter": {
