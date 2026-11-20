@@ -1,0 +1,23 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`dockerfile fragment pins Playwright MCP and installs Playwright's Chromium, not the snap 1`] = `
+"# --- browser: headless Chromium + Playwright MCP for agent screenshots
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \\
+    AGENTBOX_BROWSER_VIEWPORT=1440x900 \\
+    AGENTBOX_BROWSER_OUTPUT_DIR=/tmp/agentbox-browser
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \\
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \\
+    apt-get update && apt-get install -y --no-install-recommends \\
+      fonts-liberation fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji
+RUN npm install -g --no-fund --no-audit @playwright/mcp@0.0.83 \\
+ && mkdir -p /opt/agentbox && ln -sfn "$(npm root -g)/@playwright/mcp" /opt/agentbox/playwright-mcp \\
+ && PW_CLI="$(node -p "require.resolve('playwright/package.json',{paths:['/opt/agentbox/playwright-mcp']}).replace('package.json','cli.js')")" \\
+ && node "$PW_CLI" install --with-deps chromium \\
+ && rm -rf /var/lib/apt/lists/* \\
+ && chmod -R a+rX /ms-playwright
+COPY browser/ /opt/agentbox/browser/
+RUN chmod 0755 /opt/agentbox/browser/*.sh /opt/agentbox/browser/*.mjs \\
+ && ln -sf /opt/agentbox/browser/agentbox-browser-mcp.sh /usr/local/bin/agentbox-browser-mcp \\
+ && ln -sf /opt/agentbox/browser/agentbox-screenshot.mjs /usr/local/bin/agentbox-screenshot \\
+ && install -d -m 1777 /tmp/agentbox-browser"
+`;

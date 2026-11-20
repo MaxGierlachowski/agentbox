@@ -1,0 +1,43 @@
+{
+  "name": "@workspace/web",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3100",
+    "build": "next build",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
+    "@orpc/client": "^1.15.3",
+    "@orpc/contract": "^1.15.3",
+    "@orpc/tanstack-query": "^1.15.3",
+    "@tanstack/react-query": "^5",
+    "@workspace/contract": "workspace:*",
+    "@workspace/ui": "workspace:*",
+    "date-fns": "^4.4.0",
+    "geist": "^1",
+    "lucide-react": "^1.48.0",
+    "next": "16.3.3",
+    "next-themes": "^0.4.6",
+    "nuqs": "^2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.88.0",
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@workspace/typescript-config": "workspace:*",
+    "babel-plugin-react-compiler": "^1",
+    "eslint": "^9",
+    "eslint-plugin-react-hooks": "^7",
+    "typescript-eslint": "^8",
+    "typescript": "^5.9"
+  }
+}

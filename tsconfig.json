@@ -1,0 +1,18 @@
+{
+  // Only used by repo-level tools (dependency-cruiser, editors at the root). Each package has
+  // its own tsconfig for type checking.
+  "extends": "./packages/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/web/*"],
+      "@workspace/contract": ["packages/contract/src/index.ts"],
+      "@workspace/ui/*": ["packages/ui/src/*"],
+      "@workspace/infra/fs": ["packages/infra/src/fs/atomic.ts"],
+      "@workspace/infra/*": ["packages/infra/src/*/index.ts"],
+      "@workspace/providers/browser": ["packages/providers/src/workspace/browser/index.ts"]
+    }
+  }
+}

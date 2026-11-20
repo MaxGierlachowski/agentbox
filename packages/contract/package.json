@@ -1,0 +1,22 @@
+{
+  "name": "@workspace/contract",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@orpc/contract": "^1.15.3",
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.9"
+  }
+}

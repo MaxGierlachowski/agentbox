@@ -1,0 +1,20 @@
+{
+  "name": "@workspace/e2e",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "browser": "bun browser/run.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1",
+    "@workspace/providers": "workspace:*",
+    "@workspace/contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.9"
+  }
+}

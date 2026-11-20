@@ -1,0 +1,39 @@
+{
+  "name": "@workspace/agentbox",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "agentbox": "./src/main.ts"
+  },
+  "scripts": {
+    "dev": "bun --watch src/main.ts dev",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "compile": "bun run scripts/compile.ts"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1",
+    "@commander-js/extra-typings": "^14",
+    "@orpc/server": "^1.15.3",
+    "@oslojs/crypto": "^1",
+    "@oslojs/encoding": "^1",
+    "@workspace/contract": "workspace:*",
+    "@workspace/infra": "workspace:*",
+    "commander": "^14",
+    "hono": "^4",
+    "picocolors": "^1",
+    "pino": "^9",
+    "zod": "^4.6.0",
+    "drizzle-orm": "^0.45",
+    "@workspace/providers": "workspace:*",
+    "@workspace/automation": "workspace:*"
+  },
+  "devDependencies": {
+    "@orpc/client": "^1.15.3",
+    "@orpc/contract": "^1.15.3",
+    "@types/bun": "latest",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.9"
+  }
+}

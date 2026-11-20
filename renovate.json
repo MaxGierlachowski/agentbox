@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommitTypeAll(chore)",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch", "minor"],
+      "matchCurrentVersion": "!/^0/",
+      "groupName": "non-major dependencies"
+    },
+    {
+      "matchPackageNames": [
+        "next",
+        "react",
+        "react-dom",
+        "eslint-plugin-react-hooks",
+        "babel-plugin-react-compiler"
+      ],
+      "groupName": "react and next"
+    },
+    {
+      "matchPackageNames": ["/^@orpc//"],
+      "groupName": "orpc",
+      "description": "v2 changes the wire format; migrate deliberately"
+    },
+    { "matchPackageNames": ["drizzle-orm", "drizzle-kit"], "groupName": "drizzle" }
+  ]
+}

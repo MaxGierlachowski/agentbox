@@ -1,0 +1,33 @@
+{
+  "name": "agentbox-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "e2e"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "lint": "biome check . && turbo lint",
+    "format": "biome check --write .",
+    "compile": "turbo compile",
+    "boundaries": "depcruise apps packages --config .dependency-cruiser.cjs",
+    "prepare": "lefthook install || true"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2",
+    "turbo": "^2.9.18",
+    "typescript": "^5.9",
+    "@changesets/cli": "^2",
+    "dependency-cruiser": "^17",
+    "lefthook": "^1"
+  },
+  "//trustedDependencies": "Empty on purpose: blocks Bun's default-trusted install scripts (ssh2, cpu-features). Their native modules crash compiled Bun binaries.",
+  "trustedDependencies": []
+}

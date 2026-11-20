@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - name: Biome
+        run: bunx biome ci .
+      - name: Module boundaries
+        run: bunx depcruise apps packages --config .dependency-cruiser.cjs
+      - run: bunx turbo typecheck lint test
+      - name: Build binaries (UI embedded)
+        run: bun run --cwd apps/agentbox compile --target linux-x64 --target linux-arm64
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agentbox-binaries
+          path: apps/agentbox/dist/agentbox-linux-*
+          retention-days: 7
+
+  # Runs the compiled binary on a real Linux host with a real Docker daemon: embedded UI,
+  # migrations from the bundle, dockerode inside the binary.
+  smoke:
+    needs: check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: agentbox-binaries
+      - name: doctor
+        run: |
+          chmod +x agentbox-linux-x64
+          ./agentbox-linux-x64 doctor
+      - name: serve UI and API
+        run: |
+          export AGENTBOX_DATA_DIR=$RUNNER_TEMP/data AGENTBOX_RUNTIME_DIR=$RUNNER_TEMP/run
+          ./agentbox-linux-x64 up > up.log 2>&1 &
+          for i in $(seq 1 20); do curl -fs 127.0.0.1:7777/healthz && break; sleep 0.5; done
+          curl -fs -H 'host: 127.0.0.1:7777' 127.0.0.1:7777/ | grep -q '<html'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'host: 127.0.0.1:7777' 127.0.0.1:7777/api/rpc/auth/me)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'host: evil.example' 127.0.0.1:7777/healthz)" = 403
+          cat up.log
+
+  # The browser capability as agents use it: Ubuntu 24.04 image, verify check, MCP over stdio,
+  # screenshots. Screenshots are uploaded so a human or an AI can look at them.
+  browser:
+    needs: check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - uses: docker/setup-buildx-action@v3
+      - run: bun run --cwd e2e browser --out ${{ runner.temp }}/browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-screenshots
+          path: ${{ runner.temp }}/browser/*.png
+
