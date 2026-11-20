@@ -35,7 +35,7 @@ jobs:
           test -f _site/index.html && test -f _site/docs/index.html && test -f _site/docs/plan/index.html
           test -f _site/assets/fonts/geist-latin.woff2 && test ! -e _site/README.md
           # Self-contained: no external scripts, stylesheets or fonts on the product page.
-          if grep -Eq '<(script|link)[^>]+(src|href)="https?://' _site/index.html; then echo "external resource"; exit 1; fi
+          if grep -Eq '<script[^>]+src="https?://|<link[^>]+rel="(stylesheet|preload|icon|modulepreload)"[^>]+href="https?://|url\(["'"'"']?https?://' _site/index.html; then echo "external resource"; exit 1; fi
       - uses: actions/configure-pages@v5
         if: github.event_name != 'pull_request'
       - uses: actions/upload-pages-artifact@v3
