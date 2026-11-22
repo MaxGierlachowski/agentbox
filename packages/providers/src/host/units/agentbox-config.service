@@ -20,8 +20,9 @@ RuntimeDirectoryPreserve=yes
 Restart=always
 RestartSec=2
 TimeoutStopSec=20
-# Needs sudo for the fixed `agentbox host apply` actions, so no NoNewPrivileges.
-ProtectSystem=full
+# Needs sudo for the fixed `agentbox host apply` actions (apt installs, unit restarts), so no
+# NoNewPrivileges and no ProtectSystem: sudo children inherit this unit's mount namespace and a
+# read-only /usr would break apt.
 UMask=0027
 
 [Install]
