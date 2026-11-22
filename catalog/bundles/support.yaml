@@ -1,0 +1,42 @@
+id: support
+name: Support
+description: Ticket and inbox triage, clear answers and help-center drafts. Drafts, never sends.
+roles: [support]
+skills:
+  - skill.simple-english
+  - skill.rest-graphql-debug
+  - skill.internal-comms
+  - skill.rss-feeds
+mcps:
+  - mcp.gmail
+  - mcp.slack
+  - mcp.intercom
+  - mcp.sentry
+  - mcp.atlassian
+clis: []
+opt_in:
+  - skill.rss-feeds
+  - mcp.intercom
+  - mcp.sentry
+  - mcp.atlassian
+soul_role: support
+first_task: >-
+  Take the last 20 support emails, group them by topic and draft (don't send) answers to the three
+  most common questions.
+first_task_alternatives:
+  - Rewrite the customer reply I paste next so it is clear, friendly and short.
+  - Draft a help-center article for the question customers ask most often.
+  - Explain the error behind a customer complaint I paste, in plain words, with a suggested reply.
+suggested_sites:
+  - { name: Google, url: "https://accounts.google.com/" }
+  - { name: Slack, url: "https://slack.com/signin" }
+  - { name: Intercom, url: "https://app.intercom.com/admins/sign_in" }
+suggested_crons:
+  - name: support-digest
+    schedule: "0 17 * * 1-5"
+    prompt: >-
+      Summarize today's support emails by topic, flag anything urgent or unanswered for more than a
+      day, and list questions that deserve a help-center article.
+    deliver: home
+    skills: [skill.email-inbox-triage]
+    enabled: false
