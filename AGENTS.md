@@ -13,7 +13,7 @@ contracts between repos in `docs/plan/v1-interfaces.md`, decisions in `docs/adr/
 - `packages/infra` – SQLite/Drizzle, age secret store, filesystem helpers
 - `packages/providers` – host installation: pinned component manifest, install scripts, systemd units, Caddyfile
 - `catalog/` – curated skills/MCPs/CLIs, role bundles, agentbox skills, SOUL templates (embedded in the binary)
-- `e2e` – mock API server for UI work, Playwright tests, VM acceptance harness (`e2e/vm/`)
+- `e2e` – mock API server (`bun run --cwd e2e mock`), Playwright UI tests (`bun run --cwd e2e test`), VM acceptance harness (`e2e/vm/acceptance.sh`)
 - `packages/ui` – design system: `src/components` is vendored shadcn/ui (Radix), `src/composites` is ours
 - `packages/typescript-config` – shared tsconfig presets
 

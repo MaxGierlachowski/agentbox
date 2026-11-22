@@ -705,7 +705,9 @@ async function configureHermes(ctx: Ctx, paseoMcp: Artifact, bridge: Artifact | 
     if (!(await enabled())) {
       const r = await hermes(["plugins", "enable", "hermes-paseo-bridge"])
       if (!(await enabled()))
-        throw new Error(`could not enable hermes-paseo-bridge: ${(r.stderr || r.stdout).trim().split("\n").slice(-4).join(" ")}`)
+        throw new Error(
+          `could not enable hermes-paseo-bridge: ${(r.stderr || r.stdout).trim().split("\n").slice(-4).join(" ")}`,
+        )
       changed = true
     }
     const settings = {

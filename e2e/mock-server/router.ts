@@ -8,15 +8,15 @@ import type {
   RunSummary,
   Selection,
 } from "@workspace/contract"
+import { contract } from "@workspace/contract"
 import { BASE, BUNDLES, bundleIds, byId, CATALOG } from "./catalog"
-import { contractNext } from "./contract-next"
 import type { MockState, RunEntry } from "./state"
 
 export interface MockContext {
   session: string | null
 }
 
-const os = implement(contractNext).$context<MockContext>()
+const os = implement(contract).$context<MockContext>()
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const now = () => new Date().toISOString()
