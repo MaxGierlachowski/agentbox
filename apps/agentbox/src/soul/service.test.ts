@@ -47,3 +47,25 @@ test("regeneration rewrites only the generated block", () => {
   expect(next).not.toContain("acme/api")
   expect(next.split(SOUL_GENERATED_END)).toHaveLength(2)
 })
+
+test("regenerate takes over Hermes' stock SOUL and keeps it as a backup", async () => {
+  const { mkdtemp, readFile, writeFile } = await import("node:fs/promises")
+  const { tmpdir } = await import("node:os")
+  const { join } = await import("node:path")
+  const { SoulService, SOUL_MARKER } = await import("./service")
+  const dir = await mkdtemp(join(tmpdir(), "soul-"))
+  await writeFile(join(dir, "SOUL.md"), "You are Hermes Agent, built by Nous Research.\n")
+  const soul = new SoulService({
+    hermesHome: dir,
+    templates: CATALOG.soul,
+    values: async () => values,
+    role: () => "orchestrator",
+  })
+  const { markdown } = await soul.regenerate(false)
+  expect(markdown.startsWith(SOUL_MARKER)).toBe(true)
+  expect(markdown).toContain("Ada")
+  expect(await readFile(join(dir, "SOUL.md.hermes-default"), "utf8")).toContain("Nous Research")
+  // A second regenerate keeps user edits outside the generated block.
+  await soul.save(markdown.replace("# Who you are", "# Who you are\nMy note."))
+  expect((await soul.regenerate(false)).markdown).toContain("My note.")
+})

@@ -66,7 +66,13 @@ export function createRouter(s: Services) {
     onboarding: {
       get: a.onboarding.get.handler(() => s.onboarding.get()),
       save: a.onboarding.save.handler(({ input }) => guard(() => s.onboarding.save(input))),
-      complete: a.onboarding.complete.handler(() => guard(() => s.onboarding.complete())),
+      complete: a.onboarding.complete.handler(() =>
+        guard(async () => {
+          // Skipped the SOUL step? Hermes still gets one that knows the user and the box.
+          await s.soul.regenerate(false)
+          return s.onboarding.complete()
+        }),
+      ),
     },
     ai: {
       status: a.ai.status.handler(() => guard(() => s.ai.status())),

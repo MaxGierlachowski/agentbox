@@ -87,17 +87,28 @@ export class AiService {
         }
       }),
     )
-    const pending = [...this.pending.entries()].map(([flowId, p]) => {
-      const flow = this.deps.flows.get(flowId)
-      return {
+    const pending = []
+    for (const [flowId, p] of this.pending) {
+      let flow: LoginFlow
+      try {
+        flow = this.deps.flows.get(flowId)
+      } catch {
+        this.pending.delete(flowId) // expired
+        continue
+      }
+      if (flow.state === "cancelled") {
+        this.pending.delete(flowId)
+        continue
+      }
+      pending.push({
         slug: p.id,
         label: p.label,
         status: flow.state === "error" ? ("error" as const) : ("pending" as const),
         email: null,
         message: flow.message,
         isDefault: false,
-      }
-    })
+      })
+    }
     const known = new Set(accounts.map((a) => a.slug))
     const apiKeys = (["anthropic", "openai", "openrouter"] as const).map((provider) => {
       const ref = `ai.${provider}_api_key`

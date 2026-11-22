@@ -16,6 +16,9 @@ export function render(template: string, values: Partial<SoulValues>) {
   })
 }
 
+/** First line of every SOUL agentbox composed; anything without it is not ours (e.g. Hermes' stock SOUL). */
+export const SOUL_MARKER = "<!-- agentbox:soul -->"
+
 /** base + box facts + role + optional purpose section. */
 export function compose(
   templates: CatalogData["soul"],
@@ -29,7 +32,7 @@ export function compose(
     templates[`role-${role}`] ?? templates["role-orchestrator"],
   ]
   if (purpose) parts.push(`# Your purpose\n${purpose.trim()}`)
-  return `${parts
+  return `${SOUL_MARKER}\n${parts
     .filter(Boolean)
     .map((p) => render(p as string, values).trim())
     .join("\n\n")}\n`
@@ -70,13 +73,18 @@ export class SoulService {
       : join(this.deps.hermesHome, "SOUL.md")
   }
 
+  /** Our SOUL if agentbox wrote one; null for none or Hermes' stock SOUL. */
+  private ours(profile: string | null = null) {
+    const file = this.file(profile)
+    if (!existsSync(file)) return null
+    const text = readFileSync(file, "utf8")
+    return text.startsWith(SOUL_MARKER) ? text : null
+  }
+
   async get() {
     const values = await this.deps.values()
     const generated = generatedBlock(this.deps.templates, values)
-    const file = this.file()
-    const markdown = existsSync(file)
-      ? readFileSync(file, "utf8")
-      : compose(this.deps.templates, this.deps.role(), values)
+    const markdown = this.ours() ?? compose(this.deps.templates, this.deps.role(), values)
     return { markdown, generated }
   }
 
@@ -90,9 +98,13 @@ export class SoulService {
   /** Re-renders the generated blocks (or composes from scratch when there is no SOUL yet). */
   async regenerate(_ai: boolean) {
     const values = await this.deps.values()
+    const current = this.ours()
     const file = this.file()
-    const markdown = existsSync(file)
-      ? refreshGenerated(readFileSync(file, "utf8"), generatedBlock(this.deps.templates, values))
+    // Hermes writes a stock SOUL on first start: keep it next to ours, then take over.
+    if (!current && existsSync(file))
+      await writeFileAtomic(`${file}.hermes-default`, readFileSync(file, "utf8"), 0o644)
+    const markdown = current
+      ? refreshGenerated(current, generatedBlock(this.deps.templates, values))
       : compose(this.deps.templates, this.deps.role(), values)
     return this.save(markdown)
   }
@@ -107,9 +119,8 @@ export class SoulService {
   async refreshAll(profiles: string[]) {
     const block = generatedBlock(this.deps.templates, await this.deps.values())
     for (const p of [null, ...profiles]) {
-      const file = this.file(p)
-      if (existsSync(file))
-        await writeFileAtomic(file, refreshGenerated(readFileSync(file, "utf8"), block), 0o644)
+      const current = this.ours(p)
+      if (current) await writeFileAtomic(this.file(p), refreshGenerated(current, block), 0o644)
     }
   }
 }
