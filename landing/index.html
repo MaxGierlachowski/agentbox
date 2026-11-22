@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>agentbox: a coding-agent workspace on one VM, configured and connected</title>
-  <meta name="description" content="agentbox turns an empty Ubuntu VM into a private workspace for coding agents: Claude Code in the browser with CloudCLI, MCP servers managed in MetaMCP, work items in Plane, and an automation that hands labelled tasks to Claude. One binary, one spec, tailnet only. Open source, work in progress.">
+  <title>agentbox: your own agent box on one VM</title>
+  <meta name="description" content="One command turns a fresh Ubuntu 24.04 VM into your own agent box: Hermes as the orchestrating agent, Claude Code agents through Paseo, a logged-in Chrome they share, and Hermes UI on your laptop and phone over iroh, end-to-end encrypted. No open ports, no accounts with us. Open source, MIT.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="https://maxgierlachowski.github.io/agentbox/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="agentbox">
-  <meta property="og:title" content="agentbox: a coding-agent workspace on one VM">
-  <meta property="og:description" content="Claude Code in the browser, MCP servers in one place, work items in Plane, and an automation that hands labelled tasks to Claude. One binary, tailnet only.">
+  <meta property="og:title" content="agentbox: your own agent box on one VM">
+  <meta property="og:description" content="An orchestrating agent, coding agents and a logged-in browser they share, reachable from laptop and phone end-to-end encrypted. No open ports, no accounts with us.">
   <meta property="og:url" content="https://maxgierlachowski.github.io/agentbox/">
-  <meta property="og:image" content="https://maxgierlachowski.github.io/agentbox/assets/shots/overview-dark.webp">
+  <meta property="og:image" content="https://maxgierlachowski.github.io/agentbox/assets/shots/toolkit.webp">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preload" href="assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -50,6 +50,7 @@
       --shadow: 0 1px 2px rgba(9, 9, 11, .04), 0 12px 32px -8px rgba(9, 9, 11, .1);
       --shadow-lg: 0 2px 4px rgba(9, 9, 11, .04), 0 32px 64px -16px rgba(9, 9, 11, .2);
       --grid: rgba(9, 9, 11, .045);
+      --arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 12'%3E%3Cpath d='M1 6h19M15 1l5 5-5 5' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -90,10 +91,11 @@
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
     img { display: block; max-width: 100%; height: auto; }
     code, pre, .mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; }
-    :not(pre) > code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: .1em .35em; font-size: .86em; }
+    :not(pre) > code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: .1em .35em; font-size: .86em; overflow-wrap: anywhere; }
     .wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
     .skip { position: absolute; left: 12px; top: -48px; z-index: 50; background: var(--surface); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); }
     .skip:focus { top: 12px; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
 
     .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; background: var(--zinc); }
     .dot.doing { background: var(--accent); }
@@ -113,7 +115,7 @@
     nav.top .links a.btn { color: #fff; }
     @media (max-width: 900px) { nav.top .links a:not(.btn):not(.gh) { display: none; } }
 
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: 15px; border: 1px solid var(--border); color: var(--fg); background: var(--surface); transition: border-color .15s, transform .15s, background .15s; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 10px; font: inherit; font-weight: 600; font-size: 15px; border: 1px solid var(--border); color: var(--fg); background: var(--surface); cursor: pointer; transition: border-color .15s, transform .15s, background .15s; }
     .btn:hover { text-decoration: none; border-color: var(--border-strong); }
     .btn:active { transform: scale(.98); }
     .btn.primary { background: var(--accent-solid); border-color: transparent; color: #fff; box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 6px 20px -6px rgba(97, 95, 255, .7); }
@@ -124,7 +126,7 @@
     .hero { position: relative; padding: 72px 0 40px; isolation: isolate; overflow-x: clip; }
     .hero::before { content: ""; position: absolute; inset: -62px 0 0; z-index: -1; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 44px 44px; -webkit-mask-image: radial-gradient(ellipse 80% 70% at 60% 30%, #000 30%, transparent 75%); mask-image: radial-gradient(ellipse 80% 70% at 60% 30%, #000 30%, transparent 75%); }
     .hero::after { content: ""; position: absolute; z-index: -1; width: 720px; height: 520px; right: -120px; top: -80px; background: radial-gradient(closest-side, rgba(97, 95, 255, .22), transparent); filter: blur(10px); }
-    .hero-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.2fr); gap: 48px; align-items: center; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.15fr); gap: 48px; align-items: center; }
     @media (max-width: 960px) { .hero { padding-top: 36px; } .hero-grid { grid-template-columns: 1fr; gap: 32px; } }
     .eyebrow { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px 5px 10px; }
     h1 { font-size: clamp(38px, 4.6vw, 58px); line-height: 1.03; letter-spacing: -.035em; font-weight: 680; margin: 20px 0 20px; text-wrap: balance; }
@@ -132,17 +134,30 @@
     .lead { font-size: clamp(17px, 1.6vw, 19px); color: var(--muted); max-width: 33em; margin: 0 0 30px; text-wrap: pretty; }
     .lead strong { color: var(--fg); font-weight: 600; }
     .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-    .facts-line { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 26px; font-size: 13px; color: var(--muted); }
 
     .stage { position: relative; border-radius: 22px; padding: 10px; background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, transparent), color-mix(in srgb, var(--surface-2) 70%, transparent)); border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
     .stage .screen { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
-    .shot-frame { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-lg); background: var(--surface); }
+    .shot-frame { display: block; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); background: var(--surface); }
     .mac-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface-2); font-size: 12px; color: var(--muted); }
     .lights { display: flex; gap: 6px; }
     .lights i { width: 10px; height: 10px; border-radius: 50%; background: var(--border-strong); display: block; }
     .mac-bar .url { margin: 0 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; }
 
-    .legend { margin-top: 56px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+    /* Install command with copy button */
+    .install { margin-top: 44px; border-radius: var(--radius); background: var(--code-bg); border: 1px solid #27272a; box-shadow: var(--shadow); color: var(--code-fg); overflow: hidden; scroll-margin-top: 90px; }
+    .install-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px 10px 18px; border-bottom: 1px solid #27272a; font-size: 13px; color: #a1a1aa; }
+    .install pre { margin: 0; padding: 16px 18px 18px; overflow-x: auto; font-size: 14px; line-height: 1.6; color: #fafafa; }
+    .install pre .p { color: #a3a1ff; user-select: none; }
+    .copy { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 12px; border-radius: 8px; border: 1px solid #3f3f46; background: #18181b; color: #fafafa; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; flex: none; }
+    .copy:hover { border-color: #71717a; }
+    .copy svg { width: 15px; height: 15px; }
+    .copy[data-state="done"] { border-color: #10b981; color: #34d399; }
+    .no-js .copy { display: none; }
+    .install-foot { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 0 18px 14px; font-size: 13px; color: #a1a1aa; }
+    .install-foot a { color: #c7c6ff; }
+    @media (max-width: 1180px) { .install pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; } }
+
+    .legend { margin-top: 20px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
     .legend > div { padding: 18px 20px; border-left: 1px solid var(--border); }
     .legend > div:first-child { border-left: 0; }
     .legend b { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
@@ -150,7 +165,7 @@
     @media (max-width: 860px) { .legend { grid-template-columns: 1fr 1fr; } .legend > div:nth-child(3) { border-left: 0; } .legend > div:nth-child(n+3) { border-top: 1px solid var(--border); } }
     @media (max-width: 460px) { .legend { grid-template-columns: 1fr; } .legend > div { border-left: 0; } .legend > div + div { border-top: 1px solid var(--border); } }
 
-    section { padding: 96px 0; }
+    section { padding: 96px 0; scroll-margin-top: 40px; }
     section.band { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
     .kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--accent-ink); margin-bottom: 12px; }
     h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.08; letter-spacing: -.03em; font-weight: 660; margin: 0 0 14px; text-wrap: balance; max-width: 22em; }
@@ -163,103 +178,121 @@
     .no-js .reveal { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .dot.pulse { animation: none; } html { scroll-behavior: auto; } }
 
-    .pains { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    @media (max-width: 860px) { .pains { grid-template-columns: 1fr; } }
-    .pain { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
-    .ic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); color: var(--muted); margin-bottom: 16px; border: 1px solid var(--border); }
-    .ic svg { width: 20px; height: 20px; }
-    .pain p { margin: 0; color: var(--muted); font-size: 15px; }
-    .answer { margin-top: 20px; display: flex; gap: 14px; align-items: center; padding: 18px 22px; border-radius: var(--radius); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); font-size: 16px; }
-    .answer svg { flex: none; width: 22px; height: 22px; color: var(--accent-ink); }
-
-    .steps { list-style: none; padding: 0; margin: 0 0 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
-    .steps li { position: relative; padding: 18px 20px 18px 62px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); }
-    .steps li .n { position: absolute; left: 18px; top: 17px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--accent-solid); color: #fff; }
+    /* How it works */
+    .steps { list-style: none; padding: 0; margin: 0 0 44px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 960px) { .steps { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .steps { grid-template-columns: 1fr; } }
+    .steps li { position: relative; padding: 18px 20px 20px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); }
+    .steps li .n { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--accent-solid); color: #fff; margin-bottom: 12px; }
     .steps li p { margin: 0; color: var(--muted); font-size: 15px; }
 
-    .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 36px; }
-    @media (max-width: 860px) { .flow { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 460px) { .flow { grid-template-columns: 1fr; } }
-    .flow > div { position: relative; border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--surface); }
-    .flow .col-h { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
-    .flow p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 22px; }
+    @media (max-width: 860px) { .shots { grid-template-columns: minmax(0, 1fr); } }
+    figure { margin: 0; }
+    .shots figcaption { margin-top: 12px; color: var(--muted); font-size: 14px; display: flex; gap: 10px; align-items: baseline; }
+    .shots figcaption .s { flex: none; font-size: 12px; font-weight: 600; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; }
+    .term { aspect-ratio: 1440 / 1000; display: flex; flex-direction: column; background: var(--code-bg); color: var(--code-fg); border: 1px solid #27272a; border-radius: 14px; box-shadow: var(--shadow); }
+    .term .mac-bar { border-radius: 13px 13px 0 0; }
+    .term .mac-bar { background: #18181b; border-color: #27272a; color: #a1a1aa; }
+    .term .mac-bar .lights i { background: #3f3f46; }
+    .term pre { margin: 0; flex: 1; padding: 14px 16px; font-size: 11.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+    @media (max-width: 860px) { .term { aspect-ratio: auto; } }
+    .term .c { color: #8b8b94; }
+    .term .p { color: #a3a1ff; user-select: none; }
+    .term .ok { color: #34d399; }
+    .term b { color: #fafafa; font-weight: 600; }
 
-    .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 40px; align-items: center; }
-    @media (max-width: 960px) { .split { grid-template-columns: 1fr; } }
-    .split ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
-    .split li { display: flex; gap: 12px; color: var(--muted); font-size: 15.5px; }
-    .split li b { color: var(--fg); font-weight: 600; }
-    .split li svg { flex: none; width: 20px; height: 20px; color: var(--accent-ink); margin-top: 2px; }
+    /* Diagrams */
+    .diagram { border: 1px solid var(--border); border-radius: 18px; padding: 22px; background: var(--surface); }
+    .diagram + .diagram { margin-top: 18px; }
+    .diagram > figcaption { margin: 0 0 18px; color: var(--muted); font-size: 15px; }
+    .diagram > figcaption b { color: var(--fg); font-size: 16px; display: block; margin-bottom: 2px; }
+    .lane-t { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+    .lane-t.back { margin-top: 24px; }
+    .chain { --n: 6; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 30px; }
+    .chain.n5 { --n: 5; }
+    .chain li { position: relative; padding: 11px 13px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); min-width: 0; }
+    .chain li b { display: block; font-size: 14px; line-height: 1.35; }
+    .chain li > span { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+    .chain li.key { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); box-shadow: 0 0 0 4px var(--accent-soft); }
+    .chain.back li.key { border-color: color-mix(in srgb, var(--emerald) 55%, var(--border)); box-shadow: 0 0 0 4px var(--emerald-soft); }
+    .chain li.dim { border-style: dashed; }
+    .chain li + li::before { content: ""; position: absolute; left: -27px; top: 50%; width: 24px; height: 12px; margin-top: -6px; background: var(--muted); -webkit-mask: var(--arrow) center / contain no-repeat; mask: var(--arrow) center / contain no-repeat; }
+    @media (max-width: 860px) {
+      .chain, .chain.n5 { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+      .chain li + li::before { left: 50%; top: -20px; margin: 0 0 0 -12px; transform: rotate(90deg); }
+    }
+    .chain li > .apps { display: grid; gap: 4px; margin-top: 6px; }
+    .apps code { font-size: 11.5px; }
+    .diagram .note { margin: 18px 0 0; font-size: 14px; color: var(--muted); }
 
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-    @media (max-width: 960px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
-    .tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-    section.band .tile { background: var(--bg); }
-    .tile .ic { width: 36px; height: 36px; border-radius: 9px; background: var(--accent-soft); color: var(--accent-ink); border: 0; margin-bottom: 12px; }
+    /* Stack cards */
+    .glue { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 22px 24px; border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-soft); margin: 40px 0 14px; }
+    .glue p { margin: 6px 0 0; color: var(--muted); font-size: 15px; max-width: 56em; }
+    .glue h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+    .glue h3 a { color: var(--fg); }
+    @media (max-width: 700px) { .glue { grid-template-columns: 1fr; } .glue .btn { justify-self: start; } }
+    .projects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 960px) { .projects { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 600px) { .projects { grid-template-columns: minmax(0, 1fr); } }
+    .proj { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+    .proj h3 { font-size: 16px; margin: 0; }
+    .proj h3 a { color: var(--fg); }
+    .proj .by { font-size: 13px; color: var(--muted); margin: 2px 0 10px; }
+    .proj p { margin: 0 0 14px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+    .proj p b { color: var(--fg); font-weight: 600; }
+    .proj .meta { margin-top: auto; display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { display: inline-flex; align-items: center; font-size: 12px; font-weight: 500; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+    .tag.lic { color: var(--emerald-ink); background: var(--emerald-soft); border-color: transparent; }
+    .tag.prop { color: var(--amber-ink); background: var(--amber-soft); border-color: transparent; }
+    .tag.ours { color: var(--accent-ink); background: var(--accent-soft); border-color: transparent; }
+    .stack-foot { margin: 20px 0 0; font-size: 14.5px; color: var(--muted); max-width: 60em; }
+
+    /* Security */
+    .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 960px) { .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 600px) { .grid3 { grid-template-columns: minmax(0, 1fr); } }
+    .tile { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .tile .ic { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; background: var(--emerald-soft); color: var(--emerald-ink); margin-bottom: 12px; }
     .tile .ic svg { width: 18px; height: 18px; }
     .tile h3 { font-size: 16px; }
     .tile p { margin: 0; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
-    .tile .ver { display: inline-block; margin-top: 10px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; }
+    .tile.warn { border-color: color-mix(in srgb, var(--amber) 50%, var(--border)); }
+    .tile.warn .ic { background: var(--amber-soft); color: var(--amber-ink); }
 
-    .shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 40px; }
-    @media (max-width: 860px) { .shots { grid-template-columns: minmax(0, 1fr); } }
-    figure { margin: 0; }
-    figcaption { margin-top: 10px; color: var(--muted); font-size: 14px; }
-
-    .arch { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); gap: 18px; align-items: start; }
-    @media (max-width: 860px) { .arch { grid-template-columns: 1fr; } }
-    .lane { border: 1px dashed var(--border-strong); border-radius: 16px; padding: 14px; }
-    .lane > .lt { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 2px 4px 4px; }
-    .node { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); margin-top: 10px; }
-    section.band .node { background: var(--bg); }
-    .node .ic { width: 32px; height: 32px; flex: none; border-radius: 8px; margin: 0; }
-    .node .ic svg { width: 17px; height: 17px; }
-    .node.key { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); box-shadow: 0 0 0 4px var(--accent-soft); }
-    .node.key .ic { background: var(--accent-solid); color: #fff; border-color: transparent; }
-    .node b { display: block; font-size: 14.5px; }
-    .node div > span { display: block; font-size: 13px; color: var(--muted); line-height: 1.45; }
-    .node .port { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0 7px; margin-left: 4px; }
-    .nodes-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
-    @media (max-width: 560px) { .nodes-2 { grid-template-columns: 1fr; } }
-    .arch-notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 28px; font-size: 14.5px; color: var(--muted); }
-    @media (max-width: 860px) { .arch-notes { grid-template-columns: 1fr; } }
-    .arch-notes b { color: var(--fg); }
-
-    pre { position: relative; margin: 0; background: var(--code-bg); color: var(--code-fg); border: 1px solid #27272a; border-radius: 12px; padding: 16px 18px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; }
-    pre .c { color: #71717a; }
-    pre .p { color: #a3a1ff; user-select: none; }
-    .start { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-    @media (max-width: 860px) { .start { grid-template-columns: minmax(0, 1fr); } }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    /* Status */
+    .status { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+    @media (max-width: 960px) { .status { grid-template-columns: minmax(0, 1fr); } }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; }
     section.band .card { background: var(--bg); }
-    .card h3 { margin-bottom: 12px; }
-    .card p { color: var(--muted); font-size: 15px; margin: 12px 0 0; }
-
-    .sec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    @media (max-width: 860px) { .sec { grid-template-columns: 1fr; } }
-    .sec .tile .ic { background: var(--emerald-soft); color: var(--emerald-ink); }
-
-    .road { display: grid; gap: 12px; }
-    .phase { display: grid; grid-template-columns: 140px minmax(0, 1fr) auto; gap: 18px; align-items: start; padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
-    section.band .phase { background: var(--bg); }
-    @media (max-width: 700px) { .phase { grid-template-columns: 1fr; gap: 8px; } }
-    .phase .name { font-weight: 650; }
-    .phase .name small { display: block; color: var(--muted); font-weight: 500; font-size: 13px; }
-    .phase p { margin: 0; color: var(--muted); font-size: 15px; }
-    .badge { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; border: 1px solid var(--border); color: var(--muted); }
+    .card h3 { margin-bottom: 14px; font-size: 17px; }
+    .card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+    .card li { position: relative; padding-left: 20px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+    .card li::before { content: ""; position: absolute; left: 2px; top: .6em; width: 7px; height: 7px; border-radius: 50%; background: var(--zinc); }
+    .card.ok li::before { background: var(--emerald); }
+    .card.hand li::before { background: var(--accent); }
+    .card.lim li::before { background: var(--amber); }
+    .card li b { color: var(--fg); font-weight: 600; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 13px; font-weight: 600; border-radius: 999px; padding: 3px 11px; border: 1px solid var(--border); color: var(--muted); }
     .badge.done { color: var(--emerald-ink); background: var(--emerald-soft); border-color: transparent; }
     .badge.wip { color: var(--accent-ink); background: var(--accent-soft); border-color: transparent; }
+    .badge.warn { color: var(--amber-ink); background: var(--amber-soft); border-color: transparent; }
 
+    /* Decisions */
+    .two { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+    @media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
     .adr { display: grid; gap: 10px; }
-    .adr a { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--fg); }
+    .adr a { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--fg); }
     .adr a:hover { text-decoration: none; border-color: var(--border-strong); }
     .adr .num { font-family: ui-monospace, Menlo, monospace; color: var(--muted); font-size: 13px; }
-    .adr .st { font-size: 12px; color: var(--muted); }
-    .adr .st.sup { text-decoration: line-through; }
+    .adr .st { font-size: 12.5px; color: var(--muted); text-align: right; }
     @media (max-width: 560px) { .adr a { grid-template-columns: 44px minmax(0, 1fr); } .adr .st { display: none; } }
+    .card pre { margin: 0; background: var(--code-bg); color: var(--code-fg); border: 1px solid #27272a; border-radius: 12px; padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.65; }
+    .card pre .c { color: #8b8b94; }
+    .card pre .p { color: #a3a1ff; user-select: none; }
+    .card > p { color: var(--muted); font-size: 14.5px; margin: 12px 0 0; }
 
+    /* FAQ */
     .faq { max-width: 820px; }
     details { border-bottom: 1px solid var(--border); }
     details:first-of-type { border-top: 1px solid var(--border); }
@@ -267,12 +300,16 @@
     summary::-webkit-details-marker { display: none; }
     summary::after { content: ""; flex: none; width: 12px; height: 12px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translate(-3px, -3px); transition: transform .2s; }
     details[open] summary::after { transform: rotate(225deg) translate(-3px, -3px); }
-    details p { margin: 0 0 20px; color: var(--muted); max-width: 46em; }
+    details p { margin: 0 0 14px; color: var(--muted); max-width: 46em; }
+    details p:last-child { margin-bottom: 22px; }
 
-    .cta { position: relative; overflow: hidden; text-align: center; border-radius: 24px; padding: 72px 24px; background: #09090b; color: #fafafa; isolation: isolate; border: 1px solid #27272a; }
+    .cta { position: relative; overflow: hidden; text-align: center; border-radius: 24px; padding: 64px 24px; background: #09090b; color: #fafafa; isolation: isolate; border: 1px solid #27272a; }
     .cta::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse 60% 80% at 50% 0%, rgba(97, 95, 255, .45), transparent 70%); }
     .cta h2 { margin: 0 auto 14px; color: #fafafa; }
-    .cta p { color: #a1a1aa; margin: 0 auto 28px; max-width: 34em; font-size: 18px; }
+    .cta > p { color: #a1a1aa; margin: 0 auto 28px; max-width: 34em; font-size: 18px; }
+    .cta .install { margin: 0 auto 28px; text-align: left; box-shadow: none; }
+    .cta .install pre { font-size: 13px; }
+    @media (max-width: 640px) { .cta { padding: 48px 16px; } }
     .cta .actions { justify-content: center; }
     .cta .btn:not(.primary) { background: rgba(255,255,255,.06); color: #fafafa; border-color: rgba(255,255,255,.16); }
     footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; }
@@ -288,13 +325,13 @@
       <a class="brand" href="./" aria-label="agentbox home"><img src="favicon.svg" alt="" width="28" height="28">agentbox</a>
       <div class="links">
         <a href="#how">How it works</a>
-        <a href="#automation">Automation</a>
         <a href="#stack">Stack</a>
-        <a href="#architecture">Architecture</a>
-        <a href="#roadmap">Status</a>
+        <a href="#security">Security</a>
+        <a href="#status">Status</a>
+        <a href="#faq">FAQ</a>
         <a href="docs/">Docs</a>
-        <a class="gh" href="https://github.com/MaxGierlachowski/agentbox" aria-label="agentbox on GitHub">GitHub</a>
-        <a class="btn primary small" href="docs/plan/">Read the plan</a>
+        <a class="gh" href="https://github.com/MaxGierlachowski/agentbox">GitHub</a>
+        <a class="btn primary small" href="#install">Install</a>
       </div>
     </div>
   </nav>
@@ -304,222 +341,273 @@
       <div class="wrap">
         <div class="hero-grid">
           <div class="hero-text">
-            <span class="eyebrow"><span class="dot doing pulse"></span>Open source · work in progress · single binary</span>
-            <h1>A coding-agent workspace on one VM. <span class="soft">Configured, connected, private.</span></h1>
-            <p class="lead">agentbox turns an empty Ubuntu VM into a workspace for coding agents: <strong>Claude Code in the browser</strong>, MCP servers managed in one place, work items in a real board, and an automation that hands <strong>tasks labelled <code>claude</code></strong> to Claude and moves them to review. One binary, one spec, <strong>reachable only through your tailnet</strong>.</p>
+            <span class="eyebrow"><span class="dot doing pulse"></span>Open source · v0.1.0-rc.1 · Ubuntu 24.04</span>
+            <h1>Your own agent box, on one VM. <span class="soft">No open ports. No accounts with us.</span></h1>
+            <p class="lead">One command installs <strong>an orchestrating agent</strong>, <strong>coding agents</strong> and <strong>a logged-in browser they share</strong>, and makes them reachable from your laptop and phone over an end-to-end encrypted connection.</p>
             <div class="actions">
-              <a class="btn primary" href="docs/plan/">Read the implementation plan</a>
+              <a class="btn primary" href="#install">Install</a>
+              <a class="btn" href="#how">How it works</a>
               <a class="btn" href="https://github.com/MaxGierlachowski/agentbox">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
-                View on GitHub
+                GitHub
               </a>
             </div>
-            <div class="facts-line"><span>Bun · Hono · oRPC</span><span>Next.js · shadcn/ui</span><span>Docker · Tailscale</span><span>MIT</span></div>
           </div>
           <div class="stage">
             <div class="screen">
-              <div class="mac-bar"><span class="lights"><i></i><i></i><i></i></span><span class="url">https://agentbox-01.your-tailnet.ts.net</span></div>
-              <picture>
-                <source srcset="assets/shots/overview-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="assets/shots/overview-light.webp" width="1440" height="900" alt="The agentbox overview: CloudCLI, Plane and MetaMCP running, with open buttons, host details and recent runs">
-              </picture>
+              <div class="mac-bar"><span class="lights"><i></i><i></i><i></i></span><span class="url">https://192.168.1.50:8443/setup/</span></div>
+              <img src="assets/shots/toolkit.webp" width="1440" height="1000" alt="Onboarding step 3 of 9, Your toolkit: a library search for linear lists MCP servers from the curated catalog and the official MCP Registry; below it, the skills, MCP servers and CLIs preselected for the Developer role">
             </div>
           </div>
         </div>
 
+        <div class="install" id="install">
+          <div class="install-head">
+            <span>On a fresh Ubuntu 24.04 VM, x64 or arm64</span>
+            <button class="copy" type="button" data-copy="cmd-hero" aria-label="Copy the install command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>Copy</span></button>
+          </div>
+          <pre><span class="p" aria-hidden="true">$ </span><code id="cmd-hero">curl -fsSL https://github.com/MaxGierlachowski/agentbox/releases/download/v0.1.0-rc.1/install.sh | sudo AGENTBOX_UP=1 sh</code></pre>
+          <div class="install-foot"><span>Then open the URL it prints and enter the one-time code.</span><a href="https://github.com/MaxGierlachowski/agentbox/releases">Releases and SHA256SUMS</a><a href="https://github.com/MaxGierlachowski/agentbox/blob/main/docs/release-notes.md">Release notes</a></div>
+        </div>
+
         <div class="legend reveal">
-          <div><b><span class="dot doing"></span>CloudCLI</b><p>Start and manage Claude Code sessions in the browser.</p></div>
-          <div><b><span class="dot waiting"></span>Plane</b><p>Scrum board and work items, preconfigured for agents.</p></div>
-          <div><b><span class="dot"></span>MetaMCP</b><p>Add MCP servers once; Claude Code sees them through one token.</p></div>
-          <div><b><span class="dot done"></span>Automation</b><p>Labelled items go from Todo to In Review on their own.</p></div>
+          <div><b><span class="dot doing"></span>Hermes</b><p>The orchestrating agent you talk to. It plans, remembers and delegates.</p></div>
+          <div><b><span class="dot waiting"></span>Paseo + Claude Code</b><p>Coding agents in git worktrees, started and watched by Hermes.</p></div>
+          <div><b><span class="dot done"></span>One shared Chrome</b><p>You log in to sites once in the streamed browser; agents use the sessions.</p></div>
+          <div><b><span class="dot"></span>iroh</b><p>Laptop and phone reach the box end-to-end encrypted, without port forwarding.</p></div>
         </div>
       </div>
     </header>
 
-    <section id="problem">
-      <div class="wrap">
-        <div class="kicker">Why</div>
-        <h2>Agents are easy to start. A place for them to work is not.</h2>
-        <p class="sub">Every new project means the same hour of setup: toolchains, credentials, MCP configs for each agent, a board nobody connects to the sessions. agentbox does that part once, declaratively, on a VM that is the security boundary.</p>
-        <div class="pains">
-          <div class="pain reveal">
-            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-            <h3>Hand-built workspaces</h3>
-            <p>Node, Java, Flutter, Python, agent CLIs, SSH keys, git config. Done by hand, drifting by next week, impossible to copy to the next VM.</p>
-          </div>
-          <div class="pain reveal">
-            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg></div>
-            <h3>MCP config everywhere</h3>
-            <p>Every agent has its own config format and every MCP server its own token. Adding one tool means editing several files on several machines.</p>
-          </div>
-          <div class="pain reveal">
-            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 7v7"/><path d="M12 7v4"/><path d="M16 7v9"/></svg></div>
-            <h3>Tasks and sessions apart</h3>
-            <p>The board says "to do", the agent session lives in a terminal somewhere. Nobody moves the ticket, nobody links the session.</p>
-          </div>
-        </div>
-        <div class="answer reveal">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-          <span>One spec describes the workspace. <code>agentbox apply</code> builds the image, starts the tools, creates their admin accounts, connects them and verifies every step.</span>
-        </div>
-      </div>
-    </section>
-
     <section id="how" class="band">
       <div class="wrap">
         <div class="kicker">How it works</div>
-        <h2>Three steps from an empty VM to agents working on tickets.</h2>
-        <p class="sub">Everything below runs on a VM you own, behind Tailscale. Nothing is exposed to the internet.</p>
+        <h2>From an empty VM to your first task in four steps.</h2>
+        <p class="sub">The installer sets the box up; a guided onboarding in the browser connects your accounts. The screenshots below are from a real box.</p>
         <ol class="steps">
-          <li class="reveal"><span class="n">1</span><h3>Bootstrap the VM</h3><p><code>sudo agentbox bootstrap</code> installs Docker, a firewall with only SSH open, Tailscale and the agentbox service.</p></li>
-          <li class="reveal"><span class="n">2</span><h3>Fill in one page</h3><p>Admin account, Plane workspace and project, repositories. The password goes straight into an encrypted secret store.</p></li>
-          <li class="reveal"><span class="n">3</span><h3>Apply</h3><p>CloudCLI, Plane and MetaMCP start, get their admin, close sign-up, connect to each other and appear as one-click links.</p></li>
+          <li class="reveal"><span class="n">1</span><h3>Install</h3><p>Run the one-liner. It checks the OS, installs every pinned component, starts nine services and prints a URL with a one-time code.</p></li>
+          <li class="reveal"><span class="n">2</span><h3>Claim the box</h3><p>Open the URL from a laptop on the same network and enter the six-word code. You become the only owner; the code is burned.</p></li>
+          <li class="reveal"><span class="n">3</span><h3>Onboarding</h3><p>Connect your AI, pick your role, review the suggested skills, MCP servers and CLIs, sign in to GitHub and GitLab, add SSH keys and repos, accept agent profiles, and log in to sites in the box's browser.</p></li>
+          <li class="reveal"><span class="n">4</span><h3>Work in Hermes UI</h3><p>The hand-off opens Hermes UI with a first task ready to send. Pair your phone with a QR code and keep working from anywhere.</p></li>
         </ol>
         <div class="shots">
           <figure class="reveal">
-            <div class="shot-frame">
-              <picture>
-                <source srcset="assets/shots/tools-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="assets/shots/tools-light.webp" width="1440" height="900" loading="lazy" alt="The Tools page with one admin account for all tools and the Plane workspace and project">
-              </picture>
+            <div class="term" role="img" aria-label="Terminal output of the installer: the binary is checksum-verified, agentbox up reports nine of nine services healthy and prints the LAN URL with the one-time code, the certificate fingerprint, an SSH tunnel alternative and the six-word code">
+              <div class="mac-bar"><span class="lights"><i></i><i></i><i></i></span><span class="url">you@agentbox: ~</span></div>
+<pre aria-hidden="true"><span class="p">$ </span>curl -fsSL …/v0.1.0-rc.1/install.sh | sudo AGENTBOX_UP=1 sh
+<span class="c">agentbox 0.1.0-rc.1 (linux-x64)
+  sha256 ok</span>
+
+<b>agentbox up</b> 0.1.0-rc.1 · Ubuntu 24.04 LTS · amd64
+  <span class="ok">✔</span> Paseo 0.17.3
+  <span class="ok">✔</span> Hermes v0.23.3 (takes a few minutes)
+  <span class="ok">✔</span> Browser (KasmVNC + Chrome)
+  <span class="ok">✔</span> agentbox, Hermes UI and iroh gateway
+
+<span class="ok">✔</span> <b>Agentbox is running (9/9 services healthy)</b>
+  Open: <b>https://192.168.1.50:8443/setup/#otp=river-lamp-oak-…</b>
+<span class="c">        (self-signed certificate, SHA-256 3F:A1:7C:…:9C)</span>
+  One-time code: <b>river lamp oak mint fold acre</b></pre>
             </div>
-            <figcaption>One admin for CloudCLI, Plane and MetaMCP, entered once.</figcaption>
+            <figcaption><span class="s">Step 1</span><span>The installer ends with the URL and the code. The code travels in the URL fragment, so it never reaches a log.</span></figcaption>
           </figure>
           <figure class="reveal">
-            <div class="shot-frame">
-              <picture>
-                <source srcset="assets/shots/run-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="assets/shots/run-light.webp" width="1440" height="900" loading="lazy" alt="A run with a live terminal log: providers, progress bars and verify checks">
-              </picture>
-            </div>
-            <figcaption>Every apply is a run with a live log that survives reconnects.</figcaption>
+            <a class="shot-frame" href="assets/shots/claim.webp"><img src="assets/shots/claim.webp" width="1440" height="1000" loading="lazy" alt="Claim this box: the one-time code filled in from the link, name, email and password fields, and a hint about the browser's certificate warning"></a>
+            <figcaption><span class="s">Step 2</span><span>Claim: the code is filled in from the link. Nobody else can claim the box after you.</span></figcaption>
+          </figure>
+          <figure class="reveal">
+            <a class="shot-frame" href="assets/shots/connect-ai.webp"><img src="assets/shots/connect-ai.webp" width="1440" height="1000" loading="lazy" alt="Onboarding step 1 of 9, Connect your AI: a Claude account sign-in with a link to claude.ai and a field for the code, API key fields for Anthropic, OpenAI and OpenRouter, and the model choice for Hermes"></a>
+            <figcaption><span class="s">Step 3</span><span>Connect AI: Claude subscriptions for the coding agents, API keys, or both. Hermes needs one working model.</span></figcaption>
+          </figure>
+          <figure class="reveal">
+            <a class="shot-frame" href="assets/shots/browser.webp"><img src="assets/shots/browser.webp" width="1440" height="1000" loading="lazy" alt="Onboarding step 8 of 9, Browser logins: the box's Chrome streamed into the page with a Take control switch, and suggested sign-ins for github.com and gitlab.com"></a>
+            <figcaption><span class="s">Step 3</span><span>Browser logins: the box's own Chrome, streamed. Sign in once and your agents can use those sites too.</span></figcaption>
+          </figure>
+          <figure class="reveal">
+            <a class="shot-frame" href="assets/shots/hermes-ui.webp"><img src="assets/shots/hermes-ui.webp" width="1440" height="1000" loading="lazy" alt="Hermes UI after the hand-off: a New chat dialog with the first task prefilled, asking Hermes to clone a repo and have a Paseo agent summarize its architecture and open TODOs"></a>
+            <figcaption><span class="s">Step 4</span><span>Hand-off: Hermes UI opens with a first task in the composer. Nothing is sent until you press Send.</span></figcaption>
+          </figure>
+          <figure class="reveal">
+            <a class="shot-frame" href="assets/shots/pair-phone.webp"><img src="assets/shots/pair-phone.webp" width="1440" height="1000" loading="lazy" alt="Pair a device dialog: a QR code for the phone, a link to the Hermes UI web app, and an eight-character pairing code that expires in ten minutes"></a>
+            <figcaption><span class="s">Step 4</span><span>Pair a device: scan the QR code and Hermes UI on your phone reaches the box over iroh. Laptops use <code>agentbox connect</code>.</span></figcaption>
           </figure>
         </div>
       </div>
     </section>
 
-    <section id="automation">
-      <div class="wrap">
-        <div class="kicker">Plane → CloudCLI automation</div>
-        <h2>Label a ticket <code>claude</code>. Review the result.</h2>
-        <p class="sub">A small process inside agentbox polls Plane, starts a Claude Code session in CloudCLI for each open labelled item, and keeps the ticket honest: status, live session link, and Claude's summary as comments.</p>
-        <div class="flow">
-          <div class="reveal"><div class="col-h"><span class="dot"></span>Todo</div><p>An open item carries the label <code>claude</code>. Plane CE can't filter by label server-side, so agentbox filters client-side.</p></div>
-          <div class="reveal"><div class="col-h"><span class="dot doing pulse"></span>In Progress</div><p>agentbox claims it, comments, and starts a session on its own branch, with tests and browser checks in the prompt.</p></div>
-          <div class="reveal"><div class="col-h"><span class="dot waiting"></span>Session link</div><p>The CloudCLI session is linked on the ticket as soon as it exists. Watch live or take over in the browser.</p></div>
-          <div class="reveal"><div class="col-h"><span class="dot done"></span>In Review</div><p>Claude's summary lands as a comment. Move it back to Todo with feedback and the same session continues.</p></div>
-        </div>
-        <div class="split">
-          <ul class="reveal">
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Bounded.</b> Parallel sessions, poll interval and timeout are settings; failures get a comment, go back to Todo and get <code>claude-failed</code> instead of retrying forever.</span></li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Two-way.</b> Through the Plane MCP in MetaMCP, Claude can read and comment on items while it works. Status changes stay with the automation.</span></li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Visible.</b> The Automation page lists every item with links to Plane and to the session, and a switch to pause.</span></li>
-          </ul>
-          <div class="shot-frame reveal">
-            <picture>
-              <source srcset="assets/shots/automation-dark.webp" media="(prefers-color-scheme: dark)">
-              <img src="assets/shots/automation-light.webp" width="1440" height="900" loading="lazy" alt="The Automation page: work items in progress, in review and failed, with session links and settings">
-            </picture>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="stack" class="band">
+    <section id="stack">
       <div class="wrap">
         <div class="kicker">The stack</div>
-        <h2>Small, specialised tools, wired together for you.</h2>
-        <p class="sub">After evaluating OpenHands and Paperclip, agentbox settled on plain Claude Code sessions plus three focused tools. agentbox owns the glue: images, compose, secrets, bootstrap, links.</p>
-        <div class="grid">
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2"/></svg></div><h3>CloudCLI</h3><p>Claude Code sessions in the browser, inside the workspace container with your toolchains. Its API starts sessions for the automation.</p><span class="ver">1.37.4 · :8443</span></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg></div><h3>MetaMCP</h3><p>One namespace, one endpoint, one token for Claude Code. Add MCP servers in its UI; Plane is preinstalled.</p><span class="ver">2.4.22 · :8445</span></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 7v7"/><path d="M12 7v4"/><path d="M16 7v9"/></svg></div><h3>Plane</h3><p>Community Edition from the pinned release compose. Workspace, project, label and an In Review state are created for you.</p><span class="ver">v1.4.2 · :8444</span></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M21.17 8H12"/><path d="M3.95 6.06 8.54 14"/><path d="M10.88 21.94 15.46 14"/></svg></div><h3>Browser for agents</h3><p>Headless Chromium and Playwright MCP in the same container, so agents open their own dev server and look at screenshots before saying "done".</p><span class="ver">Chromium 155</span></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div><h3>One binary</h3><p>Bun compiles daemon, CLI and the embedded Next.js UI into a single file for linux-x64 and linux-arm64.</p></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></div><h3>Declarative spec</h3><p>Toolchains via mise, repos, credentials by reference, services. Plan before apply, idempotent providers, verify after.</p></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17 10 11 4 5"/><path d="M12 19h8"/></svg></div><h3>Live logs</h3><p>Every apply streams over SSE from SQLite. Reload the page or lose the connection: the log resumes without a gap.</p></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>Sealed secrets</h3><p>An age-encrypted store, locked on start. Plaintext only in memory and on tmpfs, redacted from every log.</p></div>
-        </div>
-        <div class="shots">
-          <figure class="reveal">
-            <div class="shot-frame"><img src="assets/shots/agent-screenshot.webp" width="960" height="450" loading="lazy" alt="A screenshot an agent took through Playwright MCP of a demo to-do page after clicking Add"></div>
-            <figcaption>What the agent sees: a screenshot taken over MCP inside the container, after clicking "Add" on its own dev server.</figcaption>
-          </figure>
-          <div class="card reveal">
-            <h3>Verified end to end</h3>
-            <pre><code><span class="p">$</span> bun run --cwd e2e browser
-<span class="c">▶ agentbox verify: browser-check.mjs</span>
-  OK browser.launch: Chromium 155 started
-  OK browser.fonts: CJK 32 px, emoji 20 px
-<span class="c">▶ MCP, like Claude Code</span>
-  OK navigate to http://localhost:3000
-  OK click updates the page
-  OK console errors are visible to the agent
-  OK screenshot returned to the model as image/png</code></pre>
-            <p>Runs on Ubuntu 24.04 for linux/arm64 and linux/amd64, and in CI on every push.</p>
-          </div>
-        </div>
-      </div>
-    </section>
+        <h2>Open-source projects, pinned and wired together.</h2>
+        <p class="sub">agentbox writes almost no agent code of its own. It installs existing projects at pinned versions, checks their SHA-256, and connects them: config, secrets, systemd units, one login, one device list.</p>
 
-    <section id="architecture">
-      <div class="wrap">
-        <div class="kicker">Architecture</div>
-        <h2>The VM is the boundary. Your tailnet is the only way in.</h2>
-        <p class="sub">agentbox runs on the host and owns Docker. Every web UI is served by <code>tailscale serve</code> on its own HTTPS port; the firewall keeps only SSH open.</p>
-        <div class="arch reveal">
-          <div class="lane">
-            <div class="lt">Your devices (tailnet)</div>
-            <div class="node"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></span><div><b>Browser</b><span>agentbox UI with links to every tool</span></div></div>
-            <div class="node"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17 10 11 4 5"/><path d="M12 19h8"/></svg></span><div><b>CLI over SSH</b><span><code>agentbox apply -f workspace.yaml</code></span></div></div>
-            <div class="node key"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></span><div><b>Tailscale</b><span>HTTPS, identity headers, no public port</span></div></div>
+        <figure class="diagram reveal">
+          <figcaption><b>How a task flows</b>You ask Hermes. Hermes hands coding work to Paseo agents and hears back when they are done, in the same conversation.</figcaption>
+          <p class="lane-t">Out</p>
+          <ol class="chain" aria-label="From you to the coding agent">
+            <li><b>You</b><span>laptop or phone</span></li>
+            <li><b>Hermes UI</b><span>board and chat</span></li>
+            <li class="key"><b>Hermes agent</b><span>plans, remembers, delegates</span></li>
+            <li><b>paseo-mcp</b><span>MCP tools: start, steer, watch</span></li>
+            <li><b>Paseo</b><span>runs agents in git worktrees</span></li>
+            <li class="key"><b>Claude Code agent</b><span>writes code, uses the shared Chrome</span></li>
+          </ol>
+          <p class="lane-t back">Back</p>
+          <ol class="chain back" aria-label="From the coding agent back to you">
+            <li><b>Claude Code agent</b><span>turn ends or needs permission</span></li>
+            <li><b>Paseo events</b><span>via paseo-mcp, loopback only</span></li>
+            <li class="key"><b>hermes-paseo-bridge</b><span>Hermes plugin</span></li>
+            <li><b>Same Hermes session</b><span>resumes with the result</span></li>
+            <li><b>Hermes UI</b><span>shows the answer</span></li>
+            <li class="dim"><b>You</b><span>review, reply, approve</span></li>
+          </ol>
+        </figure>
+
+        <figure class="diagram reveal">
+          <figcaption><b>How you reach the box</b>Every remote request takes the same path. No public port, no VPN to set up.</figcaption>
+          <ol class="chain n5" aria-label="From your device to the apps on the box">
+            <li><b>Phone or laptop</b><span>Hermes UI web app, or <code>agentbox connect</code></span></li>
+            <li class="key"><b>iroh</b><span>QUIC, end-to-end encrypted, direct or via relay</span></li>
+            <li><b>iroh-gateway</b><span>admits only paired devices</span></li>
+            <li><b>Caddy</b><span>one origin and one login, on 127.0.0.1</span></li>
+            <li><b>Apps</b><span class="apps"><span><code>/</code> config UI</span><span><code>/hermes/</code> Hermes UI</span><span><code>/browser/</code> Chrome stream</span></span></li>
+          </ol>
+          <p class="note">First access only: a browser on the same network opens <code>https://&lt;lan-ip&gt;:8443</code> (self-signed, fingerprint printed) and reaches the same Caddy. On a VM with a public IP that listener stays off and you use an SSH tunnel instead.</p>
+        </figure>
+
+        <div class="glue reveal">
+          <div>
+            <h3><a href="https://github.com/MaxGierlachowski/agentbox">agentbox</a> <span class="tag lic">MIT</span> <span class="tag ours">this project</span></h3>
+            <p>A single Bun binary: installer and repair (<code>agentbox up</code>), the config UI and onboarding, an age-encrypted secret store, the device registry, and the systemd units that run everything below. Its UI is for setting the box up; Hermes UI is for working with it.</p>
           </div>
-          <div class="lane">
-            <div class="lt">VM · Ubuntu 24.04</div>
-            <div class="node key"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span><div><b>agentbox <span class="port">:443</span></b><span>systemd service: engine, providers, secret store, automation, UI on a Unix socket</span></div></div>
-            <div class="nodes-2">
-              <div class="node"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2"/></svg></span><div><b>workspace <span class="port">:8443</span></b><span>CloudCLI, Claude Code, toolchains, Chromium</span></div></div>
-              <div class="node"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 7v7"/><path d="M12 7v4"/><path d="M16 7v9"/></svg></span><div><b>plane <span class="port">:8444</span></b><span>13 containers, own Compose project</span></div></div>
-              <div class="node"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg></span><div><b>metamcp <span class="port">:8445</span></b><span>MCP gateway and UI, Postgres</span></div></div>
-              <div class="node"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><div><b>mcp-gateway</b><span>Caddy between Claude Code and MetaMCP</span></div></div>
-            </div>
-          </div>
+          <a class="btn small" href="https://github.com/MaxGierlachowski/agentbox">Source</a>
         </div>
-        <div class="arch-notes">
-          <p><b>Declarative engine.</b> Every capability is a provider with <code>detect</code>, <code>plan</code>, <code>apply</code> and <code>verify</code>, run as a DAG with a plan hash and abort.</p>
-          <p><b>Static UI.</b> Next.js runs only at build time; Hono serves the export from the binary and the oRPC API next to it.</p>
-          <p><b>Multi-workspace ready.</b> Paths, compose projects, networks and state are named per workspace from day one.</p>
+
+        <div class="projects">
+          <article class="proj reveal">
+            <h3><a href="https://github.com/NousResearch/hermes-agent">Hermes agent</a></h3>
+            <div class="by">Nous Research</div>
+            <p>The orchestrator you talk to: memory, skills, cron jobs, profiles with their own SOUL, Slack, voice. Runs from the upstream release tag, unmodified; agentbox only writes config, skills and plugins.</p>
+            <div class="meta"><span class="tag lic">MIT</span><span class="tag">v0.23.3</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://github.com/MaxGierlachowski/hermes-ui">Hermes UI</a></h3>
+            <div class="by">Max Gierlachowski</div>
+            <p>Board and inbox for Hermes sessions, approvals and Paseo agents. Served at <code>/hermes/</code> on the box and as an installable web app on your phone.</p>
+            <div class="meta"><span class="tag lic">MIT</span><span class="tag">0.3.0</span><span class="tag ours">same author</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://paseo.sh">Paseo</a></h3>
+            <div class="by">getpaseo</div>
+            <p>Runs Claude Code (and Codex) agents headless in git worktrees. On the box it listens on loopback only, with its relay and web UI off.</p>
+            <div class="meta"><span class="tag lic">Apache-2.0</span><span class="tag">0.17.3</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://github.com/MaxGierlachowski/paseo-mcp">paseo-mcp</a></h3>
+            <div class="by">Max Gierlachowski</div>
+            <p>An MCP server and Paseo plugin that lets Hermes list, start, steer and watch Paseo agents, and that publishes their events.</p>
+            <div class="meta"><span class="tag lic">Apache-2.0</span><span class="tag">0.5.0-rc.1</span><span class="tag ours">same author</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://github.com/MaxGierlachowski/paseo-multi-account">paseo-multi-account</a></h3>
+            <div class="by">Max Gierlachowski</div>
+            <p>A Paseo plugin that puts several Claude subscriptions behind one provider, each with its own config directory, so agents can switch when one hits its limit.</p>
+            <div class="meta"><span class="tag lic">Apache-2.0</span><span class="tag">1.1.0</span><span class="tag ours">same author</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://github.com/MaxGierlachowski/hermes-paseo-bridge">hermes-paseo-bridge</a></h3>
+            <div class="by">Max Gierlachowski</div>
+            <p>A Hermes plugin. When a Paseo agent finishes a turn, asks for permission or closes, the event continues the Hermes session that started it. No webhooks, no polling scripts.</p>
+            <div class="meta"><span class="tag lic">MIT</span><span class="tag">0.1.0</span><span class="tag ours">same author</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://github.com/irohkit/iroh-bridge">iroh-gateway and iroh-fetch</a></h3>
+            <div class="by">irohkit / iroh-bridge</div>
+            <p><b>iroh-gateway</b> is the box's only remote entry: it forwards HTTP, WebSocket and SSE from allow-listed devices to Caddy. <b>iroh-fetch</b> is the client side, in the Hermes UI web app and in <code>agentbox connect</code>.</p>
+            <div class="meta"><span class="tag lic">MIT</span><span class="tag">0.6.4</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://www.iroh.computer">iroh</a></h3>
+            <div class="by">n0</div>
+            <p>The networking library under both. Devices dial each other by public key over QUIC, punch through NATs, and fall back to n0's public relays, which only see encrypted traffic.</p>
+            <div class="meta"><span class="tag lic">MIT or Apache-2.0</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://github.com/kasmtech/KasmVNC">KasmVNC</a></h3>
+            <div class="by">Kasm Technologies</div>
+            <p>Streams the box's display to your browser at <code>/browser/</code>, so you can log in to sites by hand, or watch and take over while an agent browses.</p>
+            <div class="meta"><span class="tag lic">GPL-2.0</span><span class="tag">1.5.2</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://www.google.com/chrome/">Google Chrome</a></h3>
+            <div class="by">Google, built on Chromium</div>
+            <p>One persistent profile, shared by you and the agents. Agents attach through the DevTools protocol on 127.0.0.1, which is never proxied.</p>
+            <div class="meta"><span class="tag prop">Proprietary</span><span class="tag">Chromium: BSD-3-Clause</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://caddyserver.com">Caddy</a></h3>
+            <div class="by">Caddy project</div>
+            <p>The single origin on the box: config UI, <code>/hermes/</code> and <code>/browser/</code> behind one login, plus the LAN listener with its self-signed certificate.</p>
+            <div class="meta"><span class="tag lic">Apache-2.0</span><span class="tag">2.11.9</span></div>
+          </article>
+          <article class="proj reveal">
+            <h3><a href="https://github.com/anthropics/claude-code">Claude Code</a></h3>
+            <div class="by">Anthropic</div>
+            <p>The coding agent Paseo runs. It signs in with your Claude subscription or uses an API key. Not open source; installed from npm at a pinned version with auto-update off.</p>
+            <div class="meta"><span class="tag prop">Proprietary</span><span class="tag">2.1.330</span></div>
+          </article>
         </div>
+        <p class="stack-foot">Also pinned: Node.js 24.22.3, GitHub CLI 2.105.0, GitLab CLI 1.131.0. Third-party components come from their upstream releases at install time and keep their own licences. All versions live in one manifest; nothing installs "latest" at runtime.</p>
       </div>
     </section>
 
     <section id="security" class="band">
       <div class="wrap">
         <div class="kicker">Security model</div>
-        <h2>Agents get a sandboxed VM, not your laptop or production.</h2>
-        <p class="sub">The VM holds no production credentials. Inside it, agentbox adds defence in depth without pretending containers are a sandbox.</p>
-        <div class="sec">
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></div><h3>Tailnet only</h3><p>No Funnel, no public ports besides SSH. Docker binds published ports to loopback by default.</p></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></div><h3>Identity, not passwords</h3><p>Tailscale identity headers are trusted only on a Unix socket only tailscaled can reach. SSH tunnels use one-time links.</p></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>Sign-up closed first</h3><p>Every tool gets its admin before it is served, and registration is closed right after. No first-visitor-becomes-admin window.</p></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5"/></svg></div><h3>Secrets by reference</h3><p>Specs hold references only. Values live in an age store, reach containers via tmpfs and never appear in logs or API responses.</p></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3z"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></div><h3>No Docker socket</h3><p>None of the tool containers gets the Docker socket or host networking. agentbox alone owns Docker.</p></div>
-          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/><path d="M12 18v4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="4"/></svg></div><h3>Pinned and checked</h3><p>Tool versions and base images pinned; contract tests against the pinned versions catch breaking upstream releases.</p></div>
+        <h2>One owner, one port on the LAN, nothing on the internet.</h2>
+        <p class="sub">The VM is the boundary. Agents run code, so the box is built to be reachable only by you and your paired devices. This is what that means, including what v1 does not do yet.</p>
+        <div class="grid3">
+          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></div><h3>Single owner</h3><p>The first person with the one-time code becomes the owner; after that the claim page is gone. A forgotten password is reset with <code>sudo agentbox reset-owner</code> on the VM.</p></div>
+          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 6h.01"/><path d="M6 18h.01"/></svg></div><h3>Everything on 127.0.0.1</h3><p>Hermes, Hermes UI, Paseo, the browser stream and Chrome's DevTools port all listen on loopback. No container runtime, no Docker socket.</p></div>
+          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></div><h3>One LAN listener</h3><p>Only <code>:8443</code> faces the network, with a self-signed certificate whose fingerprint the installer prints. It is on only when the VM has private addresses; with a public IP you use an SSH tunnel.</p></div>
+          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg></div><h3>Remote only over iroh</h3><p>Paired devices only. A pairing code is single use and valid for ten minutes; revoking a device takes it off the gateway's allow-list.</p></div>
+          <div class="tile reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5"/></svg></div><h3>Secrets stay put</h3><p>Encrypted at rest with age, write-only in the UI (a saved key is never shown again), and redacted from run logs. CLI logins stay in the CLIs' own files, mode 0600.</p></div>
+          <div class="tile warn reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><h3>Known v1 limitation</h3><p>Your agents run as the same Linux user as the config service, so they could read the secret store. The box trusts its owner's agents with the owner's secrets. A separate agent user is planned for v1.1.</p></div>
         </div>
       </div>
     </section>
 
-    <section id="roadmap">
+    <section id="status">
       <div class="wrap">
         <div class="kicker">Status</div>
-        <h2>Honest status: the foundation runs, the tool stack is coded, not yet proven.</h2>
-        <p class="sub">agentbox is built in phases with checkable exit criteria. Here is where each one stands.</p>
-        <div class="road">
-          <div class="phase reveal"><div class="name">Phase 0<small>Walking skeleton</small></div><p>Monorepo, CI, single binary with the embedded UI for macOS and Linux, oRPC API with resumable live logs, SQLite, age secret store, login links and Tailscale socket auth, shadcn/ui design system. Storybook and the Tailscale spike on a real VM are still open.</p><span class="badge done">Mostly done</span></div>
-          <div class="phase reveal"><div class="name">v0.1<small>Empty VM to workspace</small></div><p>Spec, provider engine, host bootstrap (Docker, ufw, Tailscale, systemd), image with mise toolchains and Claude Code, credentials, repos. The browser capability for agents is built and tested end to end.</p><span class="badge wip">In progress</span></div>
-          <div class="phase reveal"><div class="name">v0.2<small>Tool stack</small></div><p>CloudCLI, MetaMCP, Plane and the Plane → CloudCLI automation: renderers, bootstrap clients, settings pages and app links exist. Next: run them against the real images and add the automation's unit tests.</p><span class="badge wip">Coded, untested</span></div>
-          <div class="phase reveal"><div class="name">v0.3<small>Mobile and more automation</small></div><p>Android emulator with KVM or Redroid, merge requests from sessions, aborting sessions from the UI.</p><span class="badge">Planned</span></div>
-          <div class="phase reveal"><div class="name">v0.4<small>Portability</small></div><p>Several workspaces per VM, spec export and import, devcontainer.json importer, snapshot and restore.</p><span class="badge">Planned</span></div>
+        <h2>v0.1.0-rc.1: a release candidate, tested where it can be.</h2>
+        <p class="sub">What a machine checks, what a person checks, and what does not work yet.</p>
+        <div class="status">
+          <div class="card ok reveal">
+            <h3><span class="badge done">Verified automatically</span></h3>
+            <ul>
+              <li><b>Clean install on Ubuntu 24.04 x64</b> from <code>install.sh</code>: all nine services healthy, claim through the LAN listener, idempotent re-run, <code>agentbox doctor</code>.</li>
+              <li><b>Clean install on Ubuntu 24.04 arm64.</b></li>
+              <li><b>The onboarding UI on a real box</b>, driven through in a browser. The screenshots on this page come from that run.</li>
+              <li><b>iroh pairing:</b> a device pairs with a one-time code and reaches the box through the gateway.</li>
+            </ul>
+          </div>
+          <div class="card hand reveal">
+            <h3><span class="badge wip">Tested by hand</span></h3>
+            <ul>
+              <li><b>Real account logins:</b> Claude subscription sign-in, GitHub and GitLab device flows, and site logins in the box's Chrome.</li>
+              <li>CI has no real accounts, so anything that depends on them is not covered automatically yet.</li>
+            </ul>
+          </div>
+          <div class="card lim reveal">
+            <h3><span class="badge warn">Known limitations</span></h3>
+            <ul>
+              <li>Agents run under the same user as the config service (single-owner box).</li>
+              <li>One active Claude account for all agents; per-agent pinning is not there yet.</li>
+              <li>Phone pairing needs the Hermes UI web app with base-path support on its Pages site.</li>
+              <li>Release binaries are not signed yet: SHA-256 over HTTPS only.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -527,60 +615,46 @@
     <section id="decisions" class="band">
       <div class="wrap">
         <div class="kicker">Decisions</div>
-        <h2>How we got here, one decision record at a time.</h2>
-        <p class="sub">The agent surface changed twice: from OpenHands to Paperclip to the current tool stack. Each step is written down with its reasons.</p>
-        <div class="adr reveal">
-          <a href="docs/adr/0001-nextjs-static-export/"><span class="num">0001</span><span>Next.js as a static export embedded in the binary</span><span class="st">accepted</span></a>
-          <a href="docs/adr/0002-orpc-contract-first/"><span class="num">0002</span><span>oRPC with a shared contract</span><span class="st">accepted</span></a>
-          <a href="docs/adr/0003-sqlite-state/"><span class="num">0003</span><span>SQLite for state, runs and events</span><span class="st">accepted</span></a>
-          <a href="docs/adr/0004-tailscale-access/"><span class="num">0004</span><span>Access through Tailscale Serve on a Unix socket</span><span class="st">accepted</span></a>
-          <a href="docs/adr/0005-openhands-agent-canvas/"><span class="num">0005</span><span>OpenHands target: Agent Canvas</span><span class="st sup">superseded</span></a>
-          <a href="docs/adr/0006-paperclip-instead-of-openhands/"><span class="num">0006</span><span>Paperclip instead of OpenHands</span><span class="st sup">superseded</span></a>
-          <a href="docs/adr/0007-cloudcli-metamcp-plane/"><span class="num">0007</span><span>CloudCLI, MetaMCP and Plane instead of an agent platform</span><span class="st">accepted</span></a>
-        </div>
-      </div>
-    </section>
-
-    <section id="start">
-      <div class="wrap">
-        <div class="kicker">Docs and source</div>
-        <h2>Everything so far, in one place.</h2>
-        <p class="sub">The implementation plan is the full design (in German): architecture, stack and library choices, spec, providers, security checklist, test strategy and phases.</p>
-        <div class="start">
-          <div class="card reveal">
-            <h3>Read</h3>
-            <div class="adr">
-              <a href="docs/plan/"><span class="num">Plan</span><span>Implementation plan (German)</span><span class="st">~800 lines</span></a>
-              <a href="docs/"><span class="num">Docs</span><span>All documents and decision records</span><span class="st">index</span></a>
-              <a href="https://github.com/MaxGierlachowski/agentbox/blob/main/AGENTS.md"><span class="num">Rules</span><span>Repository rules for humans and coding agents</span><span class="st">AGENTS.md</span></a>
-            </div>
+        <h2>Why it looks the way it does.</h2>
+        <p class="sub">Each architectural choice is written down with its context and consequences. The plan is the full v1 design, from host layout to the acceptance test.</p>
+        <div class="two">
+          <div class="adr reveal">
+            <a href="docs/plan/"><span class="num">Plan</span><span>v1 master plan: architecture, host layout, access, onboarding, catalog</span><span class="st">read</span></a>
+            <a href="docs/adr/0008-paseo-hermes-iroh-stack/"><span class="num">0008</span><span>The v1 stack: Hermes, Hermes UI, Paseo and iroh</span><span class="st">accepted</span></a>
+            <a href="docs/adr/0009-one-iroh-gateway-and-device-registry/"><span class="num">0009</span><span>One iroh gateway and one device registry</span><span class="st">accepted</span></a>
+            <a href="docs/adr/0010-first-access-otp-lan-ssh/"><span class="num">0010</span><span>First access: one-time code, LAN HTTPS or SSH tunnel</span><span class="st">accepted</span></a>
+            <a href="docs/adr/0011-native-workloads/"><span class="num">0011</span><span>Native workloads, no containers in v1</span><span class="st">accepted</span></a>
+            <a href="docs/adr/0012-catalog-v1-sources/"><span class="num">0012</span><span>Catalog v1 sources</span><span class="st">accepted</span></a>
+            <a href="docs/"><span class="num">Docs</span><span>All documents, including the records of the first prototype</span><span class="st">index</span></a>
           </div>
           <div class="card reveal">
-            <h3>Run it locally</h3>
-            <pre><code><span class="p">$</span> git clone https://github.com/MaxGierlachowski/agentbox
-<span class="p">$</span> cd agentbox && bun install
-<span class="p">$</span> bun run dev   <span class="c"># UI on http://localhost:3100</span>
+            <h3>Everyday commands</h3>
+            <pre><code><span class="p">$ </span>sudo agentbox up           <span class="c"># install, repair</span>
+<span class="p">$ </span>sudo agentbox otp          <span class="c"># new claim code</span>
+<span class="p">$ </span>sudo agentbox reset-owner  <span class="c"># new password</span>
+<span class="p">$ </span>agentbox doctor            <span class="c"># health check</span>
 
-<span class="c"># single binary with the embedded UI</span>
-<span class="p">$</span> bun run --cwd apps/agentbox compile \
-    --target linux-x64 --target linux-arm64</code></pre>
-            <p>Needs Bun 1.4.2 or later. The tool stack and the end-to-end checks need Docker.</p>
+<span class="c"># on your laptop: the box on</span>
+<span class="c"># http://localhost:8080, over iroh</span>
+<span class="p">$ </span>agentbox connect &lt;id&gt;</code></pre>
+            <p>Building from source needs Bun 1.4.2 or later; see the <a href="https://github.com/MaxGierlachowski/agentbox#development">README</a>.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="faq" class="band">
+    <section id="faq">
       <div class="wrap">
         <div class="kicker">FAQ</div>
         <h2>Questions, answered.</h2>
         <div class="faq">
-          <details><summary>Can I use agentbox today?</summary><p>Not as a product yet. The daemon, the UI, the binary build and the browser capability work and are tested. The provider engine and the apply that sets up the tools on a VM are the next milestone (v0.1). Follow the repository if you want to see it land.</p></details>
-          <details><summary>Why not OpenHands or Paperclip?</summary><p>Both were evaluated. OpenHands was not good enough for this use, and Paperclip loaded the agents with too much context. Plain Claude Code sessions in CloudCLI, MCP servers in MetaMCP and tasks in Plane turned out simpler and stronger. ADRs 0005 to 0007 have the details.</p></details>
-          <details><summary>Why is nothing public?</summary><p>The tools can run agents, and agents can run code. Keeping every UI inside your tailnet removes a whole class of attacks; Tailscale also gives HTTPS and identity for free.</p></details>
-          <details><summary>Which agents does it support?</summary><p>Claude Code is the focus, through CloudCLI and the automation. Codex and Gemini CLI are part of the plan for the workspace image; MCP configuration is rendered once and shared.</p></details>
-          <details><summary>What does it run on?</summary><p>An Ubuntu 24.04 VM with Docker, x64 or arm64. With Plane included, plan for at least 8 GB of RAM; 16 GB is comfortable.</p></details>
-          <details><summary>What is the license?</summary><p>MIT. The bundled tools keep their own licenses (CloudCLI is AGPL-3.0; Plane and MetaMCP have theirs); agentbox runs them as separate containers.</p></details>
+          <details><summary>Which VM do I need?</summary><p>A fresh Ubuntu 24.04 VM with 4 vCPU, 8 GB RAM and 40 GB disk; that is the size the acceptance test uses. Give agentbox a VM of its own: it installs system packages and systemd units and treats the machine as the box.</p></details>
+          <details><summary>Cloud VM or a VM at home, like Proxmox?</summary><p>Both work. On a home or office network the VM has only private addresses, so agentbox opens the LAN listener and you claim the box from a laptop on the same network. On a cloud VM with a public IP it listens on loopback only and prints an SSH tunnel command for the first visit. After that, both are reached the same way, over iroh.</p><p>Some sites refuse logins from datacenter IP ranges; a VM at home avoids that.</p></details>
+          <details><summary>Claude subscription or API key?</summary><p>Either, or both. A Claude subscription signs in Claude Code on the box the way it would on your laptop, and you can add several. Check that your use fits Anthropic's terms for your plan; for shared or automated use an API key is the safer choice. Hermes itself needs one working model: a Claude sign-in or a key for Anthropic, OpenAI or OpenRouter.</p></details>
+          <details><summary>What leaves the box?</summary><p>Requests to the model providers you connect, and to the sites and APIs your agents use. At install time, downloads of the pinned components from their upstream releases. In the toolkit step, searches against the official MCP Registry. Remote access goes device to device over iroh; when no direct path exists, n0's public relays forward packets they cannot decrypt.</p><p>No telemetry, no account with us, no hosted service in between. The phone link loads the Hermes UI web app from GitHub Pages; it is static and holds none of your data.</p></details>
+          <details><summary>How do I reinstall or uninstall?</summary><p>Run the one-liner or <code>sudo agentbox up</code> again at any time: it is idempotent and doubles as the repair. A new one-time code comes from <code>sudo agentbox otp</code>.</p><p>There is no uninstall command in v1. agentbox expects a VM of its own, so the clean way back is a fresh VM. Everything it installs lives in <code>/opt/agentbox</code>, <code>/etc/agentbox</code>, <code>/var/lib/agentbox</code> and <code>/home/agentbox</code>, plus the <code>agentbox-*</code> systemd units.</p></details>
+          <details><summary>Does it run on arm64?</summary><p>Yes. The binary, KasmVNC and Google Chrome all exist for arm64, and the install is checked on a clean Ubuntu 24.04 arm64 VM. The full acceptance test runs on x64.</p></details>
+          <details><summary>Is there a hosted version?</summary><p>No. agentbox is a private open-source project (MIT) that runs on your VM. There is nothing to sign up for.</p></details>
         </div>
       </div>
     </section>
@@ -588,11 +662,18 @@
     <section>
       <div class="wrap">
         <div class="cta reveal">
-          <h2>Give your agents a place to work.</h2>
-          <p>One VM, one spec, one binary. Built in the open, decision by decision.</p>
+          <h2>Try it on a spare VM.</h2>
+          <p>One command, then a browser. The onboarding takes about ten minutes.</p>
+          <div class="install">
+            <div class="install-head">
+              <span>Ubuntu 24.04, x64 or arm64</span>
+              <button class="copy" type="button" data-copy="cmd-cta" aria-label="Copy the install command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>Copy</span></button>
+            </div>
+            <pre><span class="p" aria-hidden="true">$ </span><code id="cmd-cta">curl -fsSL https://github.com/MaxGierlachowski/agentbox/releases/download/v0.1.0-rc.1/install.sh | sudo AGENTBOX_UP=1 sh</code></pre>
+          </div>
           <div class="actions">
             <a class="btn primary" href="docs/plan/">Read the plan</a>
-            <a class="btn" href="https://github.com/MaxGierlachowski/agentbox">Star on GitHub</a>
+            <a class="btn" href="https://github.com/MaxGierlachowski/agentbox">Source on GitHub</a>
           </div>
         </div>
       </div>
@@ -601,7 +682,7 @@
 
   <footer>
     <div class="wrap">
-      <span>agentbox · MIT license · Work in progress. Not affiliated with Anthropic, Plane, MetaMCP or CloudCLI.</span>
+      <span>agentbox · MIT license · Not affiliated with the projects it installs.</span>
       <nav aria-label="Footer">
         <a href="docs/">Docs</a>
         <a href="https://github.com/MaxGierlachowski/agentbox">GitHub</a>
@@ -610,6 +691,7 @@
       </nav>
     </div>
   </footer>
+  <p class="sr" aria-live="polite" id="copy-status"></p>
 
   <script>
   (() => {
@@ -618,6 +700,27 @@
       es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } })
     }, { rootMargin: '0px 0px -8% 0px' })
     document.querySelectorAll('.reveal').forEach((el) => { io ? io.observe(el) : el.classList.add('in') })
+
+    var status = document.getElementById('copy-status')
+    document.querySelectorAll('[data-copy]').forEach((btn) => {
+      var label = btn.querySelector('span')
+      btn.addEventListener('click', () => {
+        var el = document.getElementById(btn.dataset.copy)
+        var done = () => {
+          btn.dataset.state = 'done'
+          label.textContent = 'Copied'
+          status.textContent = 'Install command copied'
+          setTimeout(() => { delete btn.dataset.state; label.textContent = 'Copy'; status.textContent = '' }, 1800)
+        }
+        var fallback = () => {
+          var r = document.createRange(); r.selectNodeContents(el)
+          var s = getSelection(); s.removeAllRanges(); s.addRange(r)
+          try { if (document.execCommand('copy')) done() } catch (_) {}
+        }
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(el.textContent).then(done, fallback)
+        else fallback()
+      })
+    })
   })()
   </script>
 </body>

@@ -143,8 +143,8 @@ const plan = render(await Bun.file(join(root, planSource)).text(), planSource)
 await write(
   "docs/plan",
   page({
-    title: "Implementierungsplan",
-    lang: "de",
+    title: "v1 master plan",
+    lang: "en",
     depth: 2,
     body: wrapTables(plan.html),
     toc: plan.toc,
@@ -170,9 +170,9 @@ for (const file of (await readdir(join(root, "docs/adr"))).sort()) {
 
 // Index
 const index = `<h1>Documents</h1>
-<p>Everything written down so far. The implementation plan is the full design; the decision records explain why it looks the way it does.</p>
+<p>Everything written down so far. The v1 master plan is the full design; the decision records explain why it looks the way it does.</p>
 <div class="cards">
-<a href="plan/"><b>Implementation plan</b><span>Architecture, host layout, access, onboarding, catalog, acceptance test</span></a>
+<a href="plan/"><b>v1 master plan</b><span>Architecture, host layout, access, onboarding, catalog, acceptance test</span></a>
 <a href="${repo}/blob/main/README.md"><b>README</b><span>on GitHub</span></a>
 <a href="${repo}/blob/main/AGENTS.md"><b>AGENTS.md</b><span>repository rules for humans and coding agents</span></a>
 </div>
