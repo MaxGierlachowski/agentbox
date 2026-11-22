@@ -33,6 +33,7 @@
         "commander": "^14",
         "drizzle-orm": "^0.45",
         "hono": "^4",
+        "iroh-fetch": "0.6.4",
         "picocolors": "^1",
         "pino": "^9",
         "zod": "^4.6.0",
@@ -1101,6 +1102,20 @@
     "ip-address": ["ip-address@10.7.2", "", {}, "sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w=="],
 
     "ipaddr.js": ["ipaddr.js@1.9.1", "", {}, "sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g=="],
+
+    "iroh-fetch": ["iroh-fetch@0.6.4", "", { "optionalDependencies": { "iroh-fetch-darwin-arm64": "0.6.4", "iroh-fetch-darwin-x64": "0.6.4", "iroh-fetch-linux-arm64-gnu": "0.6.4", "iroh-fetch-linux-x64-gnu": "0.6.4", "iroh-fetch-linux-x64-musl": "0.6.4", "iroh-fetch-win32-x64-msvc": "0.6.4" }, "peerDependencies": { "react": ">=18" }, "optionalPeers": ["react"], "bin": { "iroh-proxy": "bin/iroh-proxy.js" } }, "sha512-096defrPxPv/i9/779tr28M9uhVboAm9PPjywGO449ya4xBabZIWyF9fRB8oFIzExFY4xSkf4RyRxGmzD2MxTQ=="],
+
+    "iroh-fetch-darwin-arm64": ["iroh-fetch-darwin-arm64@0.6.4", "", { "os": "darwin", "cpu": "arm64" }, "sha512-8jORX6UmhPa6ckpyVMK147j4sFvvdkZ2wj0i744d/QBMe+YCP3WJNIdY3ehOD3VTJLUQCCSN6B941JTzTE31IQ=="],
+
+    "iroh-fetch-darwin-x64": ["iroh-fetch-darwin-x64@0.6.4", "", { "os": "darwin", "cpu": "x64" }, "sha512-KugWGIUU6mWraQx6xCgjAomb6AM/mMq1HmxuEabeKXatHzuBisvOzeWMftqIdvGbPo6rgQuKby1CahuR/kRvGg=="],
+
+    "iroh-fetch-linux-arm64-gnu": ["iroh-fetch-linux-arm64-gnu@0.6.4", "", { "os": "linux", "cpu": "arm64" }, "sha512-lf8oP1TPNxiemVrnovLKrnoo1L/AgGm6r9O69Bv3Q1lUAFkfcgTt0fsGN4bCoXjDEMLvqZCQ3tHmJB6I1wtdvQ=="],
+
+    "iroh-fetch-linux-x64-gnu": ["iroh-fetch-linux-x64-gnu@0.6.4", "", { "os": "linux", "cpu": "x64" }, "sha512-RljNu64ioGJo4My3FPNa83ckcmKE6KBJWLrbMT2jHP/BSYyA5Pacw7MTk5/P3j4GxHVM1Gdlpaba+hfEJtfzRw=="],
+
+    "iroh-fetch-linux-x64-musl": ["iroh-fetch-linux-x64-musl@0.6.4", "", { "os": "linux", "cpu": "x64" }, "sha512-u9qJewpyMQqLyKxXgId7saLWV0A+kMvSPDa7zFk0MjDamkCHaapIMULU0Y1CZMc8U0e2neU0yu8N3oMcgw8gdw=="],
+
+    "iroh-fetch-win32-x64-msvc": ["iroh-fetch-win32-x64-msvc@0.6.4", "", { "os": "win32", "cpu": "x64" }, "sha512-qzJmzn7SCfvxf5ccEsEzaAZJap6wAQ+vY2EPbIpFjD9j8LESSKHrPDEt/A3Qng+arPNcCqjtnmm75OCOvaM59w=="],
 
     "is-arrayish": ["is-arrayish@0.2.1", "", {}, "sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg=="],
 

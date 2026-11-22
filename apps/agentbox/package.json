@@ -15,19 +15,20 @@
   "dependencies": {
     "@clack/prompts": "^1",
     "@commander-js/extra-typings": "^14",
+    "@orpc/client": "^1.15.3",
+    "@orpc/contract": "^1.15.3",
     "@orpc/server": "^1.15.3",
     "@oslojs/crypto": "^1",
     "@oslojs/encoding": "^1",
     "@workspace/contract": "workspace:*",
     "@workspace/infra": "workspace:*",
     "commander": "^14",
+    "drizzle-orm": "^0.45",
     "hono": "^4",
+    "iroh-fetch": "0.6.4",
     "picocolors": "^1",
     "pino": "^9",
-    "zod": "^4.6.0",
-    "drizzle-orm": "^0.45",
-    "@orpc/client": "^1.15.3",
-    "@orpc/contract": "^1.15.3"
+    "zod": "^4.6.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
