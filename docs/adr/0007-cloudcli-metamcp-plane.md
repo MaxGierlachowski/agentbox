@@ -1,6 +1,6 @@
 # 0007 – CloudCLI, MetaMCP and Plane instead of an agent platform
 
-- Status: accepted (supersedes 0006)
+- Status: superseded by 0008 (supersedes 0006)
 - Date: 2026-10-10
 
 ## Context

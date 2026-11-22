@@ -1,0 +1,869 @@
+# MCP servers. Every entry is a public server with a documented install spec:
+#   - stdio packages are pinned to an exact npm/PyPI version (npx -y pkg@ver, uvx pkg==ver)
+#   - hosted servers use the URL their vendor documents (homepage / help_url)
+# `${NAME}` refers to an entry in `env`, `${gh.token}` to the token of the authenticated gh CLI.
+items:
+  # ── Box ───────────────────────────────────────────────────────────────────────────────
+  - id: mcp.paseo
+    kind: mcp
+    name: Paseo
+    summary: Start, watch and steer Paseo coding agents (Claude Code) from Hermes.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: []
+    install:
+      mcp:
+        transport: stdio
+        command: node
+        args: [/opt/agentbox/vendor/paseo-mcp/0.4.0/paseo-mcp/dist/index.js]
+        env:
+          PASEO_MCP_CONFIG: /home/agentbox/.config/paseo-mcp/config.json
+    targets: [hermes]
+    pinned_version: 0.4.0
+    homepage: https://github.com/MaxGierlachowski/paseo-mcp
+    notes: Vendored by agentbox from the paseo-mcp release tarball; config rendered by agentbox.
+
+  # ── Code hosting and developer docs ───────────────────────────────────────────────────
+  - id: mcp.github
+    kind: mcp
+    name: GitHub
+    summary: Issues, pull requests, code search and Actions on github.com.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [developer, devops]
+    install:
+      mcp:
+        transport: http
+        url: https://api.githubcopilot.com/mcp/
+        headers:
+          Authorization: Bearer ${gh.token}
+    auth: { type: derived, from: cli.gh }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://github.com/github/github-mcp-server
+    requires: [cli.gh]
+    tags: [git, code-review]
+
+  - id: mcp.gitlab
+    kind: mcp
+    name: GitLab
+    summary: Issues, merge requests, pipelines and repo context on gitlab.com.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [developer, devops]
+    install:
+      mcp: { transport: http, url: https://gitlab.com/api/v4/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://docs.gitlab.com/user/model_context_protocol/mcp_server/
+    tags: [git, code-review]
+    notes: For self-managed GitLab 18.6+ point the URL at https://<host>/api/v4/mcp.
+
+  - id: mcp.context7
+    kind: mcp
+    name: Context7
+    summary: Up-to-date, version-specific library documentation and code examples.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [developer]
+    install:
+      mcp: { transport: http, url: https://mcp.context7.com/mcp }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://context7.com/docs/resources/all-clients
+    tags: [docs]
+    notes: Works anonymously with rate limits; an API key from context7.com raises them.
+
+  - id: mcp.deepwiki
+    kind: mcp
+    name: DeepWiki
+    summary: Ask questions about any public GitHub repository's code and docs.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [developer]
+    install:
+      mcp: { transport: http, url: https://mcp.deepwiki.com/mcp }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://docs.devin.ai/work-with-devin/deepwiki-mcp
+    tags: [docs]
+
+  - id: mcp.microsoft-learn
+    kind: mcp
+    name: Microsoft Learn
+    summary: Search official Microsoft and Azure documentation and code samples.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [developer, devops]
+    install:
+      mcp: { transport: http, url: https://learn.microsoft.com/api/mcp }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://learn.microsoft.com/en-us/training/support/mcp-get-started
+    tags: [docs]
+
+  - id: mcp.playwright
+    kind: mcp
+    name: Playwright
+    summary: Headless, isolated browser automation for testing web apps.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: [developer]
+    install:
+      mcp:
+        transport: stdio
+        command: npx
+        args: ["-y", "@playwright/mcp@0.0.86", "--headless", "--isolated", "--browser", "chromium"]
+    targets: [hermes, paseo]
+    pinned_version: 0.0.86
+    homepage: https://github.com/microsoft/playwright-mcp
+    tags: [browser, testing]
+    notes: >-
+      Runs its own throwaway headless Chromium (npx playwright install chromium). It never
+      touches the shared logged-in Chrome; use the agentbox-browser skill for that one.
+
+  - id: mcp.semgrep
+    kind: mcp
+    name: Semgrep
+    summary: Static analysis and security scanning of code.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [developer]
+    install:
+      mcp: { transport: http, url: https://mcp.semgrep.ai/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://semgrep.dev/docs/mcp
+    tags: [security]
+
+  # ── Databases and analytics ───────────────────────────────────────────────────────────
+  - id: mcp.postgres
+    kind: mcp
+    name: Postgres (read-only)
+    summary: Explore schemas, run read-only SQL and check query plans and health.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [developer, data, devops]
+    install:
+      mcp:
+        transport: stdio
+        command: uvx
+        args: ["postgres-mcp==0.3.0", "--access-mode=restricted"]
+        env:
+          DATABASE_URI: ${DATABASE_URI}
+    auth: { type: api_key }
+    env:
+      - name: DATABASE_URI
+        secret: true
+        description: postgresql://user:password@host:5432/dbname (prefer a read-only role).
+        help_url: https://github.com/crystaldba/postgres-mcp#configuration
+    targets: [hermes]
+    pinned_version: 0.3.0
+    homepage: https://github.com/crystaldba/postgres-mcp
+    requires: [cli.uv]
+    tags: [sql, database]
+    notes: Restricted mode runs read-only transactions with an execution time limit.
+
+  - id: mcp.duckdb
+    kind: mcp
+    name: DuckDB
+    summary: Query local files (CSV, Parquet, JSON) and DuckDB databases with SQL.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [data]
+    install:
+      mcp:
+        transport: stdio
+        command: uvx
+        args: ["mcp-server-motherduck==1.1.1", "--db-path", ":memory:", "--read-write"]
+    targets: [hermes]
+    pinned_version: 1.1.1
+    homepage: https://github.com/motherduckdb/mcp-server-motherduck
+    requires: [cli.uv]
+    tags: [sql, database, analytics]
+    notes: In-memory DuckDB that can read files under ~/work; nothing is persisted.
+
+  - id: mcp.supabase
+    kind: mcp
+    name: Supabase
+    summary: Manage Supabase projects, tables, migrations and edge functions.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [developer, data]
+    install:
+      mcp: { transport: http, url: https://mcp.supabase.com/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://supabase.com/docs/guides/ai-tools/mcp
+    tags: [database]
+
+  - id: mcp.posthog
+    kind: mcp
+    name: PostHog
+    summary: Product analytics, feature flags, insights and errors in PostHog.
+    source: [curated, mcp-registry]
+    tier: T0
+    licence: Proprietary
+    roles: [data, founder-ops, developer]
+    install:
+      mcp:
+        transport: http
+        url: https://mcp.posthog.com/mcp
+        headers:
+          Authorization: Bearer ${POSTHOG_API_KEY}
+    auth: { type: api_key }
+    env:
+      - name: POSTHOG_API_KEY
+        secret: true
+        description: Personal API key with the "MCP Server" preset.
+        help_url: https://us.posthog.com/settings/user-api-keys
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://posthog.com/docs/model-context-protocol
+    tags: [analytics]
+
+  - id: mcp.mixpanel
+    kind: mcp
+    name: Mixpanel
+    summary: Query Mixpanel events, funnels and reports.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [data, founder-ops]
+    install:
+      mcp: { transport: http, url: https://mcp.mixpanel.com/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://docs.mixpanel.com/docs/mcp
+    tags: [analytics]
+
+  - id: mcp.google-analytics
+    kind: mcp
+    name: Google Analytics
+    summary: Read GA4 account data, run reports and realtime queries.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: [data, designer-marketer, founder-ops]
+    install:
+      mcp:
+        transport: stdio
+        command: uvx
+        args: ["analytics-mcp==1.1.0"]
+        env:
+          GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT}
+    auth: { type: derived, from: cli.gcloud }
+    env:
+      - name: GOOGLE_CLOUD_PROJECT
+        secret: false
+        description: Google Cloud project id used for the Analytics API quota.
+        help_url: https://support.google.com/googleapi/answer/7014113
+    targets: [hermes]
+    pinned_version: 1.1.0
+    homepage: https://github.com/googleanalytics/google-analytics-mcp
+    requires: [cli.uv, cli.gcloud]
+    tags: [analytics]
+    notes: >-
+      Uses Application Default Credentials: run `gcloud auth application-default login` with the
+      analytics.readonly scope (agentbox-auth-cli) and enable the Analytics Admin and Data APIs.
+
+  # ── Observability and cloud ───────────────────────────────────────────────────────────
+  - id: mcp.sentry
+    kind: mcp
+    name: Sentry
+    summary: Issues, events, releases and root-cause hints from Sentry.
+    source: [curated]
+    tier: T0
+    licence: FSL-1.1-ALv2
+    roles: [developer, devops, support]
+    install:
+      mcp: { transport: http, url: https://mcp.sentry.dev/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://docs.sentry.io/product/sentry-mcp/
+    tags: [observability, errors]
+
+  - id: mcp.grafana
+    kind: mcp
+    name: Grafana (self-hosted)
+    summary: Dashboards, Prometheus/Loki queries, alerts and incidents in your Grafana.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: [devops, data]
+    install:
+      mcp:
+        transport: stdio
+        command: uvx
+        args: ["mcp-grafana==2.2.0"]
+        env:
+          GRAFANA_URL: ${GRAFANA_URL}
+          GRAFANA_SERVICE_ACCOUNT_TOKEN: ${GRAFANA_SERVICE_ACCOUNT_TOKEN}
+    auth: { type: api_key }
+    env:
+      - name: GRAFANA_URL
+        secret: false
+        description: Base URL of your Grafana, e.g. https://grafana.example.com.
+      - name: GRAFANA_SERVICE_ACCOUNT_TOKEN
+        secret: true
+        description: Service account token (Viewer role is enough for read-only use).
+        help_url: https://grafana.com/docs/grafana/latest/administration/service-accounts/
+    targets: [hermes]
+    pinned_version: 2.2.0
+    homepage: https://github.com/grafana/mcp-grafana
+    requires: [cli.uv]
+    tags: [observability]
+
+  - id: mcp.grafana-cloud
+    kind: mcp
+    name: Grafana Cloud
+    summary: Grafana Cloud's hosted MCP for metrics, logs, dashboards and alerts.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [devops]
+    install:
+      mcp: { transport: http, url: https://mcp.grafana.com/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://grafana.com/docs/grafana-cloud/ai-tools/mcp-servers/cloud-mcp/
+    tags: [observability]
+    notes: Needs a Grafana Cloud stack; each connected user counts as a Grafana Assistant user.
+
+  - id: mcp.kubernetes
+    kind: mcp
+    name: Kubernetes (read-only)
+    summary: Inspect pods, deployments, events and logs through your kubeconfig.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [devops]
+    install:
+      mcp:
+        transport: stdio
+        command: npx
+        args: ["-y", "mcp-server-kubernetes@4.2.3"]
+        env:
+          ALLOW_ONLY_READONLY_TOOLS: "true"
+    targets: [hermes]
+    pinned_version: 4.2.3
+    homepage: https://github.com/Flux159/mcp-server-kubernetes
+    requires: [cli.kubectl]
+    tags: [kubernetes]
+    notes: Uses ~/.kube/config of the agentbox user. Read-only tools only.
+
+  - id: mcp.aws-api
+    kind: mcp
+    name: AWS API (read-only)
+    summary: Run read-only AWS CLI operations with your configured credentials.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: [devops]
+    install:
+      mcp:
+        transport: stdio
+        command: uvx
+        args: ["awslabs.aws-api-mcp-server==1.6.1"]
+        env:
+          AWS_REGION: ${AWS_REGION}
+          READ_OPERATIONS_ONLY: "true"
+    auth: { type: derived, from: cli.aws }
+    env:
+      - name: AWS_REGION
+        secret: false
+        description: Default region, e.g. eu-central-1.
+    targets: [hermes]
+    pinned_version: 1.6.1
+    homepage: https://github.com/awslabs/mcp/tree/main/src/aws-api-mcp-server
+    requires: [cli.uv, cli.aws]
+    tags: [cloud]
+    notes: IAM permissions remain the real guard; READ_OPERATIONS_ONLY is an extra check.
+
+  - id: mcp.aws-knowledge
+    kind: mcp
+    name: AWS Knowledge
+    summary: AWS documentation, API references and architecture guidance.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [devops, developer]
+    install:
+      mcp: { transport: http, url: https://knowledge-mcp.global.api.aws }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://awslabs.github.io/mcp/servers/aws-knowledge-mcp-server/
+    tags: [docs, cloud]
+
+  - id: mcp.cloudflare
+    kind: mcp
+    name: Cloudflare
+    summary: Cloudflare accounts, Workers, DNS and logs.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [devops, developer]
+    install:
+      mcp: { transport: http, url: "https://mcp.cloudflare.com/mcp?codemode=false" }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.cloudflare.com/agents/model-context-protocol/cloudflare/servers-for-cloudflare/
+    tags: [cloud]
+
+  - id: mcp.vercel
+    kind: mcp
+    name: Vercel
+    summary: Vercel projects, deployments and build logs.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [developer, devops]
+    install:
+      mcp: { transport: http, url: https://mcp.vercel.com }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://vercel.com/docs/mcp
+    tags: [cloud, deploy]
+
+  # ── Mail, chat, calendar, documents ──────────────────────────────────────────────────
+  - id: mcp.gmail
+    kind: mcp
+    name: Gmail
+    summary: Search and read mail, manage labels and create drafts (Google's hosted MCP).
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, founder-ops, support]
+    install:
+      mcp:
+        transport: http
+        url: https://gmailmcp.googleapis.com/mcp/v1
+        oauth:
+          client_id: ${GOOGLE_OAUTH_CLIENT_ID}
+          client_secret: ${GOOGLE_OAUTH_CLIENT_SECRET}
+    auth: { type: oauth }
+    env: &google-oauth-client
+      - name: GOOGLE_OAUTH_CLIENT_ID
+        secret: false
+        description: OAuth client id (Desktop app) from your Google Cloud project.
+        help_url: https://developers.google.com/workspace/guides/configure-mcp-servers
+      - name: GOOGLE_OAUTH_CLIENT_SECRET
+        secret: true
+        description: The matching OAuth client secret.
+        help_url: https://developers.google.com/workspace/guides/configure-mcp-servers
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.google.com/workspace/gmail/api/guides/configure-mcp-server
+    tags: [email, google]
+    notes: >-
+      Google's MCP servers have no dynamic client registration. Create one OAuth client in a
+      Google Cloud project, enable the Gmail API and its MCP service, then sign in inside the
+      box browser. The same client works for Calendar and Drive.
+
+  - id: mcp.google-calendar
+    kind: mcp
+    name: Google Calendar
+    summary: Read and create calendar events (Google's hosted MCP).
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, founder-ops]
+    install:
+      mcp:
+        transport: http
+        url: https://calendarmcp.googleapis.com/mcp/v1
+        oauth:
+          client_id: ${GOOGLE_OAUTH_CLIENT_ID}
+          client_secret: ${GOOGLE_OAUTH_CLIENT_SECRET}
+    auth: { type: oauth }
+    env: *google-oauth-client
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.google.com/workspace/guides/configure-mcp-servers
+    tags: [calendar, google]
+    notes: Needs your own Google OAuth client and the Calendar MCP service enabled (see Gmail).
+
+  - id: mcp.google-drive
+    kind: mcp
+    name: Google Drive
+    summary: Search, read and create files in Google Drive (Google's hosted MCP).
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, founder-ops, designer-marketer]
+    install:
+      mcp:
+        transport: http
+        url: https://drivemcp.googleapis.com/mcp/v1
+        oauth:
+          client_id: ${GOOGLE_OAUTH_CLIENT_ID}
+          client_secret: ${GOOGLE_OAUTH_CLIENT_SECRET}
+    auth: { type: oauth }
+    env: *google-oauth-client
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.google.com/workspace/guides/configure-mcp-servers
+    tags: [documents, google]
+    notes: Needs your own Google OAuth client and the Drive MCP service enabled (see Gmail).
+
+  - id: mcp.slack
+    kind: mcp
+    name: Slack
+    summary: Search Slack, read channels and threads, send messages and manage canvases.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, founder-ops, support, devops]
+    install:
+      mcp:
+        transport: http
+        url: https://mcp.slack.com/mcp
+        oauth:
+          client_id: ${SLACK_MCP_CLIENT_ID}
+          client_secret: ${SLACK_MCP_CLIENT_SECRET}
+    auth: { type: oauth }
+    env:
+      - name: SLACK_MCP_CLIENT_ID
+        secret: false
+        description: Client id of your internal Slack app.
+        help_url: https://docs.slack.dev/ai/mcp-server
+      - name: SLACK_MCP_CLIENT_SECRET
+        secret: true
+        description: Client secret of the same app.
+        help_url: https://docs.slack.dev/ai/mcp-server
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://docs.slack.dev/ai/mcp-server
+    tags: [chat]
+    notes: >-
+      Slack allows MCP only for internal or Marketplace apps and has no dynamic client
+      registration: use an internal Slack app, add the user scopes the tools need and paste its
+      client id and secret.
+
+  - id: mcp.notion
+    kind: mcp
+    name: Notion
+    summary: Search, read and edit Notion pages and databases.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, founder-ops, designer-marketer]
+    install:
+      mcp: { transport: http, url: https://mcp.notion.com/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.notion.com/docs/mcp
+    tags: [documents, wiki]
+
+  # ── Project management ────────────────────────────────────────────────────────────────
+  - id: mcp.linear
+    kind: mcp
+    name: Linear
+    summary: Linear issues, projects, cycles and comments.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, founder-ops, developer]
+    install:
+      mcp: { transport: http, url: https://mcp.linear.app/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://linear.app/docs/mcp
+    tags: [tickets]
+
+  - id: mcp.atlassian
+    kind: mcp
+    name: Jira and Confluence
+    summary: Jira issues and Confluence pages through Atlassian's hosted MCP.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, developer, support]
+    install:
+      mcp: { transport: http, url: https://mcp.atlassian.com/v1/mcp/authv2 }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://support.atlassian.com/rovo/docs/getting-started-with-the-atlassian-remote-mcp-server/
+    tags: [tickets, wiki]
+
+  - id: mcp.plane
+    kind: mcp
+    name: Plane
+    summary: Plane projects, work items, cycles and modules (cloud or self-hosted).
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [manager, developer]
+    install:
+      mcp:
+        transport: stdio
+        command: uvx
+        args: ["plane-mcp-server==0.3.5", "stdio"]
+        env:
+          PLANE_API_KEY: ${PLANE_API_KEY}
+          PLANE_WORKSPACE_SLUG: ${PLANE_WORKSPACE_SLUG}
+          PLANE_BASE_URL: ${PLANE_BASE_URL}
+    auth: { type: api_key }
+    env:
+      - name: PLANE_API_KEY
+        secret: true
+        description: API token from Workspace settings → API tokens.
+      - name: PLANE_WORKSPACE_SLUG
+        secret: false
+        description: The workspace slug from the Plane URL.
+      - name: PLANE_BASE_URL
+        secret: false
+        required: false
+        description: Only for self-hosted Plane, e.g. https://plane.example.com.
+    targets: [hermes]
+    pinned_version: 0.3.5
+    homepage: https://github.com/makeplane/plane-mcp-server
+    requires: [cli.uv]
+    tags: [tickets]
+
+  - id: mcp.asana
+    kind: mcp
+    name: Asana
+    summary: Asana tasks, projects and portfolios.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, founder-ops]
+    install:
+      mcp: { transport: http, url: https://mcp.asana.com/v2/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.asana.com/docs/integrating-with-asanas-mcp-server
+    tags: [tickets]
+
+  - id: mcp.todoist
+    kind: mcp
+    name: Todoist
+    summary: Personal and shared Todoist tasks and projects.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [founder-ops, manager]
+    install:
+      mcp: { transport: http, url: https://ai.todoist.net/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://www.todoist.com/help/articles/todoist-mcp-server
+    tags: [tasks]
+
+  # ── Customers and payments ────────────────────────────────────────────────────────────
+  - id: mcp.intercom
+    kind: mcp
+    name: Intercom
+    summary: Intercom conversations, contacts and help-center content.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [support, founder-ops]
+    install:
+      mcp: { transport: http, url: https://mcp.intercom.com/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.intercom.com/docs/guides/mcp
+    tags: [support]
+
+  - id: mcp.stripe
+    kind: mcp
+    name: Stripe
+    summary: Stripe customers, payments, subscriptions and docs search.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [founder-ops, support]
+    install:
+      mcp: { transport: http, url: https://mcp.stripe.com }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://docs.stripe.com/mcp
+    tags: [payments]
+    notes: Grant the narrowest access during OAuth; agents should ask before any write.
+
+  # ── Design and content ────────────────────────────────────────────────────────────────
+  - id: mcp.figma
+    kind: mcp
+    name: Figma
+    summary: Design context, variables and Code Connect from Figma files.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [designer-marketer, developer]
+    install:
+      mcp: { transport: http, url: https://mcp.figma.com/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/
+    tags: [design]
+    notes: >-
+      Figma only registers allow-listed OAuth client names; Hermes registers as "Claude Code"
+      for this host automatically.
+
+  - id: mcp.canva
+    kind: mcp
+    name: Canva
+    summary: Search, create and export Canva designs.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [designer-marketer]
+    install:
+      mcp: { transport: http, url: https://mcp.canva.com/mcp }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://www.canva.dev/docs/mcp/
+    tags: [design]
+
+  - id: mcp.miro
+    kind: mcp
+    name: Miro
+    summary: Read and create content on Miro boards.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [designer-marketer, manager]
+    install:
+      mcp: { transport: http, url: https://mcp.miro.com/ }
+    auth: { type: oauth }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://developers.miro.com/docs/connecting-to-miro-mcp
+    tags: [design, whiteboard]
+
+  # ── Web search and fetching ───────────────────────────────────────────────────────────
+  - id: mcp.exa
+    kind: mcp
+    name: Exa search
+    summary: Web, code and company search with clean page contents.
+    source: [curated]
+    tier: T0
+    licence: Proprietary
+    roles: [manager, founder-ops, designer-marketer, data]
+    install:
+      mcp: { transport: http, url: https://mcp.exa.ai/mcp }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://docs.exa.ai/reference/exa-mcp
+    tags: [search]
+    notes: Works without a key at a free rate limit.
+
+  - id: mcp.brave-search
+    kind: mcp
+    name: Brave Search
+    summary: Web, news, image and local search through the Brave Search API.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops, designer-marketer]
+    install:
+      mcp:
+        transport: stdio
+        command: npx
+        args: ["-y", "@brave/brave-search-mcp-server@2.2.0"]
+        env:
+          BRAVE_API_KEY: ${BRAVE_API_KEY}
+    auth: { type: api_key }
+    env:
+      - name: BRAVE_API_KEY
+        secret: true
+        description: Brave Search API key (free plan available).
+        help_url: https://brave.com/search/api/
+    targets: [hermes]
+    pinned_version: 2.2.0
+    homepage: https://github.com/brave/brave-search-mcp-server
+    tags: [search]
+
+  - id: mcp.firecrawl
+    kind: mcp
+    name: Firecrawl
+    summary: Scrape, crawl and extract structured data from websites.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [data, designer-marketer]
+    install:
+      mcp:
+        transport: stdio
+        command: npx
+        args: ["-y", "firecrawl-mcp@3.41.0"]
+        env:
+          FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY}
+    auth: { type: api_key }
+    env:
+      - name: FIRECRAWL_API_KEY
+        secret: true
+        description: Firecrawl API key (free credits on signup).
+        help_url: https://www.firecrawl.dev/app/api-keys
+    targets: [hermes]
+    pinned_version: 3.41.0
+    homepage: https://github.com/firecrawl/firecrawl-mcp-server
+    tags: [scraping]
+
+  - id: mcp.fetch
+    kind: mcp
+    name: Fetch
+    summary: Fetch a URL and return it as markdown (MCP reference server).
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      mcp:
+        transport: stdio
+        command: uvx
+        args: ["mcp-server-fetch==2026.11.18"]
+    targets: [hermes, paseo]
+    pinned_version: 2026.11.18
+    homepage: https://github.com/modelcontextprotocol/servers/tree/main/src/fetch
+    requires: [cli.uv]
+    tags: [web]
+
+  - id: mcp.time
+    kind: mcp
+    name: Time
+    summary: Current time and timezone conversion (MCP reference server).
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      mcp:
+        transport: stdio
+        command: uvx
+        args: ["mcp-server-time==2026.11.18"]
+    targets: [hermes]
+    pinned_version: 2026.11.18
+    homepage: https://github.com/modelcontextprotocol/servers/tree/main/src/time
+    requires: [cli.uv]
+    tags: [time]

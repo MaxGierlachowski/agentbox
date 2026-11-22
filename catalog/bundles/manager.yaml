@@ -1,0 +1,59 @@
+id: manager
+name: Manager / PM
+description: Meeting notes, status updates, decisions and inbox and calendar briefs. Drafts, never sends.
+roles: [manager]
+skills:
+  - skill.competitor-news-monitor
+  - skill.architecture-diagram
+  - skill.one-three-one-rule
+  - skill.decision-questionnaire
+  - skill.microsoft-office
+  - skill.internal-comms
+  - skill.live-dashboard
+mcps:
+  - mcp.gmail
+  - mcp.google-calendar
+  - mcp.slack
+  - mcp.google-drive
+  - mcp.linear
+  - mcp.notion
+  - mcp.atlassian
+  - mcp.plane
+  - mcp.asana
+clis: []
+opt_in:
+  - skill.live-dashboard
+  - mcp.google-drive
+  - mcp.linear
+  - mcp.notion
+  - mcp.atlassian
+  - mcp.plane
+  - mcp.asana
+soul_role: manager
+first_task: >-
+  Give me a brief for this week: the meetings in my calendar, the emails that wait for my answer,
+  and what I should prepare first. Don't send anything.
+first_task_alternatives:
+  - Turn the meeting notes I paste next into decisions, owners and due dates.
+  - Draft (don't send) replies to the emails from the last two days that are waiting for me.
+  - Run a weekly review with me - what I committed to, what is stalled, and what comes next week.
+suggested_sites:
+  - { name: Google, url: "https://accounts.google.com/" }
+  - { name: Slack, url: "https://slack.com/signin" }
+  - { name: Linear, url: "https://linear.app/login" }
+  - { name: Notion, url: "https://www.notion.so/login" }
+suggested_crons:
+  - name: morning-brief
+    schedule: "0 8 * * 1-5"
+    prompt: >-
+      Morning brief: today's meetings with one line of context each, emails from the last 24
+      hours that need my answer, and the three most important things for today. Draft nothing.
+    deliver: home
+    skills: [skill.email-inbox-triage]
+    enabled: false
+  - name: weekly-review
+    schedule: "0 16 * * 5"
+    prompt: Weekly review - commitments made this week, what stalled, and a plan for next week.
+    deliver: home
+    skills: [skill.weekly-review-planning]
+    enabled: false

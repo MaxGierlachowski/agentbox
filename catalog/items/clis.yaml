@@ -1,0 +1,191 @@
+# CLIs installed on the host by agentbox's host installer. `install.cli.plan` names the install
+# plan it implements (apt package, vendor apt repo or pinned release binary for x64 and arm64 on
+# Ubuntu 24.04). `pinned_version: null` means the Ubuntu 24.04 archive version.
+items:
+  - id: cli.git
+    kind: cli
+    name: git
+    summary: Version control; every repo under ~/work is a git checkout.
+    source: [curated]
+    tier: T0
+    licence: GPL-2.0-only
+    roles: []
+    install: { cli: { plan: cli.git } }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://git-scm.com/
+    notes: Ubuntu archive package `git`. Identity is set from the gh profile or the form.
+
+  - id: cli.gh
+    kind: cli
+    name: GitHub CLI
+    summary: Repos, pull requests, issues, Actions and SSH keys on GitHub.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [developer, devops]
+    install: { cli: { plan: cli.gh } }
+    auth: { type: device }
+    targets: [hermes, paseo]
+    pinned_version: 2.105.0
+    homepage: https://cli.github.com/
+    notes: >-
+      Device flow: gh auth login --web --git-protocol ssh --skip-ssh-key -s admin:public_key
+      -h github.com (admin:public_key lets agentbox register the box's SSH key).
+
+  - id: cli.glab
+    kind: cli
+    name: GitLab CLI
+    summary: Repos, merge requests, issues, pipelines and SSH keys on GitLab.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [developer, devops]
+    install: { cli: { plan: cli.glab } }
+    auth: { type: device }
+    targets: [hermes, paseo]
+    pinned_version: 1.131.0
+    homepage: https://gitlab.com/gitlab-org/cli
+    notes: >-
+      Device flow: glab auth login --device --hostname gitlab.com --git-protocol ssh (GitLab
+      17.9+); older self-managed instances need a personal access token.
+
+  - id: cli.jq
+    kind: cli
+    name: jq
+    summary: Slice, filter and reshape JSON on the command line.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [developer, devops, data]
+    install: { cli: { plan: cli.jq } }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://jqlang.org/
+
+  - id: cli.ripgrep
+    kind: cli
+    name: ripgrep
+    summary: Fast recursive code search (rg).
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [developer, devops]
+    install: { cli: { plan: cli.ripgrep } }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://github.com/BurntSushi/ripgrep
+
+  - id: cli.uv
+    kind: cli
+    name: uv
+    summary: Python package and tool runner; runs uvx-based MCP servers.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [developer, data]
+    install: { cli: { plan: cli.uv } }
+    targets: [hermes, paseo]
+    pinned_version: 0.13.9
+    homepage: https://docs.astral.sh/uv/
+
+  - id: cli.docker
+    kind: cli
+    name: Docker
+    summary: Build and run containers and Compose stacks.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: [developer, devops]
+    install: { cli: { plan: cli.docker } }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://docs.docker.com/engine/
+    notes: >-
+      Ubuntu archive `docker.io` + `docker-compose-v2`. Membership in the docker group is
+      root-equivalent; agentbox asks before adding the agentbox user to it.
+
+  - id: cli.aws
+    kind: cli
+    name: AWS CLI
+    summary: Manage AWS resources; credentials reused by the AWS MCP.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: [devops]
+    install: { cli: { plan: cli.aws } }
+    auth: { type: device }
+    targets: [hermes, paseo]
+    pinned_version: 2.42.1
+    homepage: https://aws.amazon.com/cli/
+    notes: aws configure sso + aws sso login --use-device-code; access keys also work.
+
+  - id: cli.gcloud
+    kind: cli
+    name: Google Cloud CLI
+    summary: Manage Google Cloud; provides Application Default Credentials.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: [devops, data]
+    install: { cli: { plan: cli.gcloud } }
+    auth: { type: device }
+    targets: [hermes, paseo]
+    pinned_version: 594.0.1
+    homepage: https://cloud.google.com/sdk/docs/install
+    notes: Google's apt repository (google-cloud-cli). Login with gcloud auth login --no-launch-browser.
+
+  - id: cli.kubectl
+    kind: cli
+    name: kubectl
+    summary: Inspect and operate Kubernetes clusters.
+    source: [curated]
+    tier: T0
+    licence: Apache-2.0
+    roles: [devops]
+    install: { cli: { plan: cli.kubectl } }
+    targets: [hermes, paseo]
+    pinned_version: 1.37.2
+    homepage: https://kubernetes.io/docs/reference/kubectl/
+    notes: Needs a kubeconfig at ~/.kube/config of the agentbox user.
+
+  - id: cli.terraform
+    kind: cli
+    name: Terraform
+    summary: Plan and apply infrastructure as code.
+    source: [curated]
+    tier: T0
+    licence: BUSL-1.1
+    roles: [devops]
+    install: { cli: { plan: cli.terraform } }
+    targets: [hermes, paseo]
+    pinned_version: 1.17.2
+    homepage: https://developer.hashicorp.com/terraform
+    notes: HashiCorp's apt repository. Source-available (BUSL-1.1), free to use.
+
+  - id: cli.psql
+    kind: cli
+    name: psql
+    summary: PostgreSQL command-line client.
+    source: [curated]
+    tier: T0
+    licence: PostgreSQL
+    roles: [data, developer, devops]
+    install: { cli: { plan: cli.psql } }
+    targets: [hermes, paseo]
+    pinned_version: null
+    homepage: https://www.postgresql.org/docs/current/app-psql.html
+    notes: Ubuntu archive package `postgresql-client`.
+
+  - id: cli.duckdb
+    kind: cli
+    name: DuckDB
+    summary: In-process analytical SQL over CSV, Parquet and JSON files.
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: [data]
+    install: { cli: { plan: cli.duckdb } }
+    targets: [hermes, paseo]
+    pinned_version: 2.0.1
+    homepage: https://duckdb.org/

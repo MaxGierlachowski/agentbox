@@ -1,0 +1,34 @@
+# Always installed, whatever roles the user picks.
+id: base
+name: Base
+description: Everyday skills, the agentbox skills that manage the box, and the Paseo connection.
+roles: []
+skills:
+  - skill.grounded-citations
+  - skill.document-to-action-items
+  - skill.meeting-action-items
+  - skill.email-inbox-triage
+  - skill.weekly-review-planning
+  - skill.humanizer
+  - skill.pdf
+  - skill.blocked-page-recovery
+  - skill.agentbox-onboard
+  - skill.agentbox-add-tool
+  - skill.agentbox-auth-cli
+  - skill.agentbox-ssh
+  - skill.agentbox-repo-setup
+  - skill.agentbox-make-agent
+  - skill.agentbox-doctor
+  - skill.agentbox-browser
+mcps:
+  - mcp.paseo
+clis:
+  - cli.git
+soul_role: orchestrator
+first_task: >-
+  Give me a short tour of this box: what is set up, what is still missing, and three things you
+  could do for me today.
+first_task_alternatives:
+  - Run a health check of this box and tell me if anything needs fixing.
+  - Summarize the PDF I upload next in five bullet points with page references.
+  - Help me pair my phone so I can reach you on the go.
