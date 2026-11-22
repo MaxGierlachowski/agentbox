@@ -41,7 +41,13 @@ jobs:
           bun install --frozen-lockfile
           (cd ../hermes-ui && npm ci --no-audit --no-fund)
           (cd ../paseo-multi-account && npm ci --no-audit --no-fund)
-          bun scripts/release.ts --local --targets linux-x64
+          # The host install does not depend on the UI build; until the new UI has landed, use a
+          # placeholder so this job tests provisioning on its own.
+          if bun run --cwd apps/web build; then SKIP=""; else
+            mkdir -p apps/web/out/setup && echo '<!doctype html><title>agentbox</title>' | tee apps/web/out/index.html apps/web/out/404.html > apps/web/out/setup/index.html
+            SKIP=--skip-web
+          fi
+          bun scripts/release.ts --local --skip-web --targets linux-x64
         env:
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Stage release files like GitHub Releases
