@@ -1,7 +1,11 @@
-First release candidate of agentbox v1: your own agent box on one Ubuntu 24.04 VM.
+Release candidate 2 of agentbox v1: your own agent box on one Ubuntu 24.04 VM.
+
+Changes since rc.1: `agentbox connect` works in the released binaries (the iroh native addon is
+now embedded instead of loaded from the build machine), and an install run skips items that wait
+for a sign-in or API key instead of failing.
 
 ```sh
-curl -fsSL https://github.com/MaxGierlachowski/agentbox/releases/download/v0.1.0-rc.1/install.sh | sudo AGENTBOX_UP=1 sh
+curl -fsSL https://github.com/MaxGierlachowski/agentbox/releases/download/v0.1.0-rc.2/install.sh | sudo AGENTBOX_UP=1 sh
 ```
 
 Then open the printed `https://<lan-ip>:8443/setup/#otp=…` link, enter the one-time code, and

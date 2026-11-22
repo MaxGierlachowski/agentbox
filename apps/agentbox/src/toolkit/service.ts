@@ -35,6 +35,9 @@ export interface ToolkitDeps {
   afterChange: () => Promise<void>
 }
 
+/** An item that can't be installed until the user signs in or enters a key; the run goes on. */
+export class NeedsSetup extends Error {}
+
 export const mcpName = (id: string) => id.replace(/^mcp\./, "").replace(/[^a-z0-9_-]/g, "-")
 const secretRef = (id: string, env: string) =>
   `catalog.${id.replace(/^[a-z]+\./, "")}.${env.toLowerCase()}`
@@ -88,17 +91,30 @@ export class ToolkitService {
 
       let mcpChanged = false
       const order = { cli: 0, skill: 1, mcp: 2 } as const
+      const waiting: string[] = []
       for (const item of [...items].sort((a, b) => order[a.kind] - order[b.kind])) {
         await ctx.step(item.name, async () => {
-          if (item.kind === "cli") await this.installCli(item, ctx)
-          else if (item.kind === "skill") await this.installSkill(item, ctx)
-          else {
-            await this.installMcp(item, ctx)
-            mcpChanged = true
+          try {
+            if (item.kind === "cli") await this.installCli(item, ctx)
+            else if (item.kind === "skill") await this.installSkill(item, ctx)
+            else {
+              await this.installMcp(item, ctx)
+              mcpChanged = true
+            }
+            this.markInstalled([item.id])
+          } catch (err) {
+            if (!(err instanceof NeedsSetup)) throw err
+            // Not an error of the run: install it again once the login or key exists.
+            waiting.push(item.name)
+            ctx.log(`${err.message}\n`, "stderr")
+            ctx.check(item.id, "warn", err.message)
           }
-          this.markInstalled([item.id])
         })
       }
+      if (waiting.length)
+        ctx.log(
+          `Waiting for sign-in or keys: ${waiting.join(", ")}. Add them again after connecting.\n`,
+        )
       for (const id of remove.filter((r) => !CORE.has(r))) {
         const item = this.d.catalog.item(id)
         if (!item) continue
@@ -210,7 +226,7 @@ export class ToolkitService {
       const ref = secretRef(item.id, v.name)
       if (this.d.secrets.has(ref)) env[v.name] = this.d.secrets.reveal(ref)
       else if (v.required)
-        throw new Error(`${item.name} needs ${v.name}. Enter it on the Connect accounts page.`)
+        throw new NeedsSetup(`${item.name} needs ${v.name}. Enter it on the Connect accounts page.`)
     }
     for (const cli of ["gh", "glab"] as const) {
       if (!values.some((x) => x.includes(`\${${cli}.token}`))) continue
@@ -220,7 +236,7 @@ export class ToolkitService {
       })
       const token = r.stdout.trim()
       if (r.code !== 0 || !token)
-        throw new Error(`${item.name} uses your ${cli} login: sign in to ${cli} first.`)
+        throw new NeedsSetup(`${item.name} uses your ${cli} login: sign in to ${cli} first.`)
       this.d.runs.addRedaction(token)
       env[`AGENTBOX_${cli.toUpperCase()}_TOKEN`] = token
     }

@@ -12,7 +12,7 @@
 set -euo pipefail
 
 : "${VM:?set VM=user@host}"
-INSTALL_URL="${INSTALL_URL:-https://github.com/MaxGierlachowski/agentbox/releases/download/v0.1.0-rc.1/install.sh}"
+INSTALL_URL="${INSTALL_URL:-https://github.com/MaxGierlachowski/agentbox/releases/download/v0.1.0-rc.2/install.sh}"
 E2E_PASSWORD="${E2E_PASSWORD:-correct horse battery staple $RANDOM}"
 AGENTBOX_BIN="${AGENTBOX_BIN:-agentbox}"
 HOST="${VM#*@}"

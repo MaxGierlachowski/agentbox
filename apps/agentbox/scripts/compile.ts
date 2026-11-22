@@ -93,10 +93,12 @@ for (const target of targets) {
         setup(build) {
           build.onLoad({ filter: /iroh-fetch[\\/]src[\\/]native\.js$/ }, (args) => {
             const src = readFileSync(args.path, "utf8")
-            const out = src.replace(
+            // Import the addon as a file so `bun build --compile` embeds it ($bunfs), then
+            // require that embedded path; a plain require(<abs path>) would be resolved at runtime.
+            const out = `import __irohAddon from ${JSON.stringify(addon)} with { type: "file" };\n${src.replace(
               "const backend = wrap(require(id));",
-              `const backend = wrap(require(${JSON.stringify(addon)}));`,
-            )
+              "const backend = wrap(require(__irohAddon));",
+            )}`
             if (out === src)
               throw new Error("iroh-fetch native.js changed; update the patch in compile.ts")
             return { contents: out, loader: "js" }
