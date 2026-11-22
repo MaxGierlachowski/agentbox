@@ -140,8 +140,20 @@ export const contract = {
     get: get().output(z.object({ selection: Selection, installed: Selection })),
     /** Installs/removes skills, MCP servers and CLIs; returns the run to follow. */
     apply: oc
-      .input(z.object({ add: z.array(z.string()), remove: z.array(z.string()).default([]) }))
+      .input(
+        z.object({
+          add: z.array(z.string()),
+          remove: z.array(z.string()).default([]),
+          /** Values for items' `env` (API keys etc.), keyed by item id then variable name. Write-only. */
+          env: z.record(z.string(), z.record(z.string(), z.string())).optional(),
+        }),
+      )
       .output(RunSummary),
+    /**
+     * Signs an installed OAuth MCP server in (Gmail, Slack, …): the consent page opens in the box's
+     * browser (embed `/browser/`), so the localhost callback lands on the box.
+     */
+    connect: oc.input(z.object({ id: z.string() })).output(LoginFlow),
   },
   soul: {
     get: get().output(Soul),

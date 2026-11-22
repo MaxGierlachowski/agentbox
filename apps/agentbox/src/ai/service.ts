@@ -7,13 +7,14 @@ import { exec } from "../exec"
 import type { FlowRegistry } from "../flows/flows"
 import { claudeParser } from "../flows/parsers"
 import type { Hermes } from "../hermes/hermes"
-import { hostApply } from "../host/helper"
 import type { Kv } from "../kv"
 import { log } from "../log"
 import { accountSlug, type PaseoConfig } from "../paseo/accounts"
 import type { RunService } from "../runs/service"
 
 const CLAUDE_BIN = "/usr/local/bin/claude"
+/** paseo-multi-account's CLI (wrapper installed by `agentbox up`); talks to the running daemon. */
+const ACCOUNTS_BIN = "/usr/local/bin/paseo-claude-accounts"
 
 /** Models offered in the Hermes model picker. Anything else can be set with `hermes config`. */
 export const MODELS: Record<string, string[]> = {
@@ -157,34 +158,56 @@ export class AiService {
     return this.deps.flows.settle(flowId, 30_000)
   }
 
+  private accountsCli(args: string[]) {
+    return exec([ACCOUNTS_BIN, ...args], {
+      env: { PASEO_HOME: this.deps.paseo.paseoHome, HOME: join(this.deps.paseo.paseoHome, "..") },
+      timeoutMs: 60_000,
+    })
+  }
+
+  /**
+   * Registers the signed-in account with paseo-multi-account, which writes the provider entry
+   * through the daemon (applied immediately). Falls back to editing config.json + reload.
+   */
   private async registerAccount(id: string, label: string, dir: string) {
-    await this.deps.paseo.upsertAccount({ id, label, enabled: true, configDir: dir })
-    if (!this.deps.kv.get<string>("ai.defaultAccount")) this.deps.kv.set("ai.defaultAccount", id)
-    await this.reloadPaseo()
+    const r = await this.accountsCli(["add", label, "--id", id, "--config-dir", dir])
+    if (r.code !== 0) {
+      log.warn(
+        { account: id, err: (r.stderr || r.stdout).trim().slice(0, 300) },
+        "plugin add failed, writing config",
+      )
+      await this.deps.paseo.upsertAccount({ id, label, enabled: false, configDir: dir })
+      await exec(
+        ["/usr/local/bin/paseo", "daemon", "reload", "--home", this.deps.paseo.paseoHome],
+        { timeoutMs: 30_000 },
+      )
+    }
+    if (!this.deps.kv.get<string>("ai.defaultAccount")) await this.accountSetDefault(id)
     log.info({ account: id }, "claude account added")
   }
 
-  private async reloadPaseo() {
-    // Paseo reads provider entries at start; restart it so the new account appears.
-    await hostApply({ action: "restart", unit: "paseo" }).catch((err) =>
-      log.warn({ err: (err as Error).message }, "paseo restart failed"),
-    )
-  }
-
   async accountRemove(slug: string) {
-    const account = this.deps.paseo.accounts().find((a) => a.id === slug)
+    const accounts = this.deps.paseo.accounts()
+    const account = accounts.find((a) => a.id === slug)
     if (!account) return { ok: false, message: "Unknown account" }
-    await this.deps.paseo.removeAccount(slug)
+    // The plugin refuses to remove the active account: switch away first.
+    if (this.deps.kv.get<string>("ai.defaultAccount") === slug) {
+      const other = accounts.find((a) => a.id !== slug)
+      if (other) await this.accountSetDefault(other.id)
+      else this.deps.kv.delete("ai.defaultAccount")
+    }
+    const r = await this.accountsCli(["remove", slug])
+    if (r.code !== 0) await this.deps.paseo.removeAccount(slug)
     await rm(account.configDir, { recursive: true, force: true })
-    if (this.deps.kv.get<string>("ai.defaultAccount") === slug)
-      this.deps.kv.delete("ai.defaultAccount")
-    await this.reloadPaseo()
     return { ok: true }
   }
 
+  /** Paseo agents use the active account (per-agent pinning is not supported by the plugin). */
   async accountSetDefault(slug: string) {
     if (!this.deps.paseo.accounts().some((a) => a.id === slug))
       return { ok: false, message: "Unknown account" }
+    const r = await this.accountsCli(["switch", slug])
+    if (r.code !== 0) return { ok: false, message: (r.stderr || r.stdout).trim().slice(0, 300) }
     this.deps.kv.set("ai.defaultAccount", slug)
     return { ok: true }
   }

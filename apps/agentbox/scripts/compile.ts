@@ -46,7 +46,9 @@ async function irohAddon(target: string) {
   const file = join(dir, "package", `iroh-fetch.${tag}.node`)
   if (!existsSync(file)) {
     await mkdir(dir, { recursive: true })
-    const tgz = (await $`npm pack iroh-fetch-${tag}@${IROH_FETCH_VERSION} --silent`.cwd(dir).text()).trim()
+    const tgz = (
+      await $`npm pack iroh-fetch-${tag}@${IROH_FETCH_VERSION} --silent`.cwd(dir).text()
+    ).trim()
     await $`tar xzf ${tgz}`.cwd(dir)
   }
   return file
@@ -95,7 +97,8 @@ for (const target of targets) {
               "const backend = wrap(require(id));",
               `const backend = wrap(require(${JSON.stringify(addon)}));`,
             )
-            if (out === src) throw new Error("iroh-fetch native.js changed; update the patch in compile.ts")
+            if (out === src)
+              throw new Error("iroh-fetch native.js changed; update the patch in compile.ts")
             return { contents: out, loader: "js" }
           })
         },

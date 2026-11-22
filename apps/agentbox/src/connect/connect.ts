@@ -12,7 +12,8 @@ interface SavedBox {
 }
 
 const configDir = () =>
-  process.env.AGENTBOX_CONNECT_DIR ?? join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "agentbox")
+  process.env.AGENTBOX_CONNECT_DIR ??
+  join(process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config"), "agentbox")
 
 // Per-connection headers that must not be forwarded, plus the ones the tunnel sets itself.
 const HOP_BY_HOP = new Set([
@@ -58,16 +59,25 @@ function loadBoxes(dir: string): SavedBox[] {
  * the box's whole origin (config UI, /hermes/, /browser/ incl. WebSockets) on localhost.
  * Uses iroh-fetch's native engine, so traffic goes direct (UDP hole punching) when possible.
  */
-export async function connect(opts: { endpoint?: string; code?: string; port: number; name?: string }) {
+export async function connect(opts: {
+  endpoint?: string
+  code?: string
+  port: number
+  name?: string
+}) {
   const dir = configDir()
   await mkdir(dir, { recursive: true, mode: 0o700 })
   const boxes = loadBoxes(dir)
   const endpointId = opts.endpoint ?? boxes.at(-1)?.endpointId
-  if (!endpointId) throw new Error("Which box? Run `agentbox connect <endpoint-id> --code <code>` from the box's Devices page first.")
+  if (!endpointId)
+    throw new Error(
+      "Which box? Run `agentbox connect <endpoint-id> --code <code>` from the box's Devices page first.",
+    )
 
   const secretKey = await loadKey(dir)
   const iroh = await createIrohFetch({ endpointId, ...(secretKey ? { secretKey } : {}) })
-  if (!secretKey) await writeFile(join(dir, "connect.key"), `${iroh.exportSecretKey()}\n`, { mode: 0o600 })
+  if (!secretKey)
+    await writeFile(join(dir, "connect.key"), `${iroh.exportSecretKey()}\n`, { mode: 0o600 })
 
   if (opts.code) {
     process.stdout.write(`Pairing with ${endpointId.slice(0, 12)}… `)
@@ -86,7 +96,13 @@ export async function connect(opts: { endpoint?: string; code?: string; port: nu
     await writeFile(join(dir, "boxes.json"), `${JSON.stringify(next, null, 2)}\n`, { mode: 0o600 })
   }
 
-  type WsData = { path: string; headers: Headers; protocols: string[]; remote?: WebSocket; queue: (string | Buffer)[] }
+  type WsData = {
+    path: string
+    headers: Headers
+    protocols: string[]
+    remote?: WebSocket
+    queue: (string | Buffer)[]
+  }
 
   const server = Bun.serve<WsData>({
     hostname: "127.0.0.1",
@@ -122,7 +138,9 @@ export async function connect(opts: { endpoint?: string; code?: string; port: nu
         headers.delete("content-length")
         return new Response(res.body, { status: res.status, statusText: res.statusText, headers })
       } catch (err) {
-        return new Response(`Box not reachable over iroh: ${(err as Error).message}`, { status: 502 })
+        return new Response(`Box not reachable over iroh: ${(err as Error).message}`, {
+          status: 502,
+        })
       }
     },
     websocket: {
@@ -135,7 +153,8 @@ export async function connect(opts: { endpoint?: string; code?: string; port: nu
           for (const m of ws.data.queue) remote.send(m)
           ws.data.queue = []
         }
-        remote.onmessage = (e) => ws.send(typeof e.data === "string" ? e.data : new Uint8Array(e.data as ArrayBuffer))
+        remote.onmessage = (e) =>
+          ws.send(typeof e.data === "string" ? e.data : new Uint8Array(e.data as ArrayBuffer))
         remote.onclose = (e) => ws.close(e.code === 1005 ? 1000 : e.code, e.reason)
         remote.onerror = () => ws.close(1011, "upstream error")
       },
@@ -151,7 +170,9 @@ export async function connect(opts: { endpoint?: string; code?: string; port: nu
   })
 
   console.log(`\n  ${pc.green("✔")} Your box is on ${pc.bold(`http://localhost:${server.port}`)}`)
-  console.log(pc.dim(`    Hermes UI: http://localhost:${server.port}/hermes/   ·   Ctrl-C to stop\n`))
+  console.log(
+    pc.dim(`    Hermes UI: http://localhost:${server.port}/hermes/   ·   Ctrl-C to stop\n`),
+  )
   const info = iroh.connectionInfo?.()
   if (info?.kind) console.log(pc.dim(`    path: ${info.kind}`))
   await new Promise(() => {})

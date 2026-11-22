@@ -105,8 +105,9 @@ export function createRouter(s: Services) {
     toolkit: {
       get: a.toolkit.get.handler(() => guard(() => s.toolkit.get())),
       apply: a.toolkit.apply.handler(({ input, context }) =>
-        guard(() => s.toolkit.apply(input.add, input.remove, context.identity.login)),
+        guard(() => s.toolkit.apply(input.add, input.remove, context.identity.login, input.env)),
       ),
+      connect: a.toolkit.connect.handler(({ input }) => guard(() => s.toolkit.connect(input.id))),
     },
     soul: {
       get: a.soul.get.handler(() => guard(() => s.soul.get())),

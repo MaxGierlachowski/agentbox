@@ -6,13 +6,14 @@ import { SecretStore } from "@workspace/infra/secrets"
 import { AiService } from "../ai/service"
 import { Auth, randomToken } from "../auth/auth"
 import { BrowserService } from "../browser/service"
-import { CatalogService } from "../catalog/service"
+import { CATALOG, CatalogService } from "../catalog/service"
 import { type Config, paths } from "../config"
 import { DeviceService } from "../devices/service"
 import { FlowRegistry } from "../flows/flows"
 import { writeFileAtomic } from "../fs"
 import { CliService } from "../git/clis"
 import { GitService } from "../git/git"
+import { HermesFiles } from "../hermes/config"
 import { Hermes } from "../hermes/hermes"
 import { Kv } from "../kv"
 import { log } from "../log"
@@ -21,7 +22,7 @@ import { PaseoConfig } from "../paseo/accounts"
 import { ProfileService } from "../profiles/service"
 import { RunService } from "../runs/service"
 import type { Services } from "../services"
-import { SoulService } from "../soul/service"
+import { boxHostname, SoulService, type SoulValues } from "../soul/service"
 import { SystemService } from "../system/service"
 import { ToolkitService } from "../toolkit/service"
 import { createApp } from "./app"
@@ -53,6 +54,87 @@ export async function startServer(config: Config, webRoot: string | null) {
     .catch((err) => log.warn({ err: (err as Error).message }, "could not render iroh access"))
   const clis = new CliService({ flows, runs, home: config.home })
 
+  const onboarding = new OnboardingService(kv)
+  const files = new HermesFiles(p.hermesHome)
+  const git = new GitService({ home: config.home, work: p.work, runs, clis, kv })
+  // Late-bound so the catalog can ask the toolkit what is installed.
+  let toolkit: ToolkitService | null = null
+  const installed = () => toolkit?.installed() ?? new Set<string>()
+  const catalog = new CatalogService(kv, installed)
+
+  const soulValues = async (): Promise<SoulValues> => {
+    const owner = auth.owner()
+    const state = onboarding.get()
+    const accounts = paseo.accounts()
+    const cliStatus = await clis.status().catch(() => [])
+    const identity = await git.identity().catch(() => null)
+    const mcps = [...installed()]
+      .filter((i) => i.startsWith("mcp."))
+      .map((i) => catalog.item(i)?.name ?? i)
+    return {
+      "agent.name": "Hermes",
+      "user.name": owner?.name ?? "the owner",
+      "user.language": state.language,
+      "user.timezone": state.timezone,
+      "user.about": state.about,
+      "user.roles": state.roles.join(", "),
+      "box.hostname": boxHostname(),
+      "paseo.accounts": accounts.map((a) => a.label).join(", "),
+      "paseo.default":
+        accounts.find((a) => a.id === kv.get<string>("ai.defaultAccount"))?.label ?? "",
+      "repos.list": git
+        .listLocal()
+        .map((r) => r.fullName)
+        .join(", "),
+      "browser.sites": state.suggestedSites.map((u) => new URL(u).hostname).join(", "),
+      "clis.authed": cliStatus
+        .filter((c) => c.authed)
+        .map((c) => `${c.id} (${c.user})`)
+        .join(", "),
+      "git.name": identity?.name ?? "",
+      "git.email": identity?.email ?? "",
+      "mcps.list": ["Paseo", ...mcps].join(", "),
+      "delivery.home": kv.get<string>("delivery.home") ?? "none yet (connect Slack to get one)",
+      "delivery.targets": "local files, this chat",
+    }
+  }
+  // The default profile is the orchestrator; the user's roles shape the other profiles.
+  const soul = new SoulService({
+    hermesHome: p.hermesHome,
+    templates: CATALOG.soul,
+    values: soulValues,
+    role: () => "orchestrator",
+  })
+  const profiles = new ProfileService({
+    hermes,
+    kv,
+    catalog,
+    soul,
+    context: () => {
+      const state = onboarding.get()
+      return {
+        roles: state.roles,
+        about: state.about,
+        installed: [...installed()],
+        repos: git.listLocal().map((r) => r.fullName),
+      }
+    },
+  })
+  toolkit = new ToolkitService({
+    catalog,
+    hermes,
+    files,
+    runs,
+    kv,
+    secrets,
+    flows,
+    home: config.home,
+    hermesSrc: "/opt/agentbox/vendor/hermes-agent/current",
+    cacheDir: join(config.dataDir, "cache"),
+    selection: () => onboarding.get().selection,
+    afterChange: () => soul.refreshAll(profiles.slugs()),
+  })
+
   const services: Services = {
     auth,
     secrets,
@@ -60,14 +142,14 @@ export async function startServer(config: Config, webRoot: string | null) {
     flows,
     devices,
     clis,
+    onboarding,
+    catalog,
+    toolkit,
+    soul,
+    git,
+    profiles,
     system: new SystemService(config, new Date()),
-    onboarding: new OnboardingService(kv),
     ai: new AiService({ flows, paseo, hermes, secrets, runs, kv }),
-    catalog: new CatalogService(),
-    toolkit: new ToolkitService(),
-    soul: new SoulService(),
-    git: new GitService({ home: config.home, work: p.work, runs, clis, kv }),
-    profiles: new ProfileService(),
     browser: new BrowserService(p.browserLock),
   }
 
