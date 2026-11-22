@@ -76,6 +76,9 @@ export function createRouter(s: Services) {
       accountLoginFinish: a.ai.accountLoginFinish.handler(({ input }) =>
         guard(() => s.ai.accountLoginFinish(input.flowId, input.code)),
       ),
+      hermesLoginStart: a.ai.hermesLoginStart.handler(({ input }) =>
+        guard(() => s.ai.hermesLoginStart(input.model)),
+      ),
       accountRemove: a.ai.accountRemove.handler(({ input }) =>
         guard(() => s.ai.accountRemove(input.slug)),
       ),

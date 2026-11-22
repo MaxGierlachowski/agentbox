@@ -84,6 +84,13 @@ export const contract = {
     accountLoginFinish: oc
       .input(z.object({ flowId: z.string(), code: z.string().min(4) }))
       .output(LoginFlow),
+    /**
+     * Signs Hermes itself in with a Claude subscription (Hermes keeps its own Anthropic OAuth,
+     * separate from the Paseo accounts). Same paste-code flow; finish with `accountLoginFinish`.
+     */
+    hermesLoginStart: oc
+      .input(z.object({ model: z.string().default("claude-sonnet-5-5") }))
+      .output(LoginFlow),
     accountRemove: oc.input(z.object({ slug: z.string() })).output(Ok),
     accountSetDefault: oc.input(z.object({ slug: z.string() })).output(Ok),
     setApiKey: oc.input(z.object({ provider: ApiKeyProvider, key: z.string().min(8) })).output(Ok),

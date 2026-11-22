@@ -233,13 +233,12 @@ export class AiService {
 
   async setHermesModel(choice: HermesChoice) {
     const h = this.deps.hermes
-    if (choice.source === "claude-account") {
-      const account = this.deps.paseo
-        .accounts()
-        .find((a) => a.id === (choice.account ?? this.deps.kv.get("ai.defaultAccount")))
-      if (!account) throw new Error("Add a Claude account first")
-      await this.useClaudeAccountForHermes(account.configDir)
-    }
+    // A Claude subscription for Hermes needs its own sign-in first (hermesLoginStart).
+    if (
+      choice.source === "claude-account" &&
+      this.deps.kv.get<HermesChoice>("ai.hermes")?.source !== "claude-account"
+    )
+      throw new Error("Sign Hermes in with your Claude subscription first")
     await h.configSet("model.provider", choice.provider)
     await h.configSet("model.default", choice.model)
     this.deps.kv.set("ai.hermes", choice)
@@ -247,20 +246,31 @@ export class AiService {
     return this.status()
   }
 
-  /**
-   * Hermes signs in to Anthropic with the same Claude subscription by reading the account's
-   * Claude Code credentials (see docs/spikes/S2.md).
-   */
-  private async useClaudeAccountForHermes(configDir: string) {
-    const r = await this.deps.hermes.run(
-      ["auth", "add", "anthropic", "--type", "oauth", "--no-browser"],
+  /** Hermes' own Anthropic OAuth (Claude subscription): URL + "Authorization code:" prompt. */
+  async hermesLoginStart(model: string): Promise<LoginFlow> {
+    const flow = this.deps.flows.start(
+      ["/usr/local/bin/hermes", "auth", "add", "anthropic", "--type", "oauth", "--no-browser"],
       {
-        env: { CLAUDE_CONFIG_DIR: configDir },
-        timeoutMs: 30_000,
-        stdin: "",
+        parse: (out) => {
+          const url = out.match(/(https:\/\/claude\.ai\/oauth\/authorize\?\S+)/)?.[1]
+          return { url, needsPaste: Boolean(url) }
+        },
+      },
+      {
+        env: { HERMES_HOME: this.deps.hermes.home },
+        onDone: async () => {
+          await this.deps.hermes.configSet("model.provider", "anthropic")
+          await this.deps.hermes.configSet("model.default", model)
+          this.deps.kv.set("ai.hermes", { source: "claude-account", provider: "anthropic", model })
+          this.deps.kv.set("ai.hermesReady", false)
+        },
       },
     )
-    if (r.code !== 0) log.warn({ code: r.code }, "hermes could not import the Claude account login")
+    return this.deps.flows.settleUntil(
+      flow.flowId,
+      (f) => Boolean(f.url) || f.state === "error",
+      20_000,
+    )
   }
 
   async probe() {

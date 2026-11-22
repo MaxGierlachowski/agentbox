@@ -8,8 +8,9 @@ import pkg from "../../package.json" with { type: "json" }
 import { CATALOG } from "../catalog/service"
 import { accessBlock, writeFirstRun } from "../cli/first-run"
 import { loadConfig } from "../config"
+import { renderAccess } from "../devices/service"
 import { exec, execOk } from "../exec"
-import { HermesFiles } from "../hermes/config"
+import { HermesFiles, quoteEnv } from "../hermes/config"
 import { releaseArtifacts } from "../release"
 import {
   type Arch,
@@ -144,7 +145,12 @@ export async function up(opts: { listen: "auto" | "lan" | "local"; skipInstall: 
 async function install(ctx: Ctx) {
   const C = COMPONENTS
   await step(ctx, "Base packages, users, directories", () => script(ctx, "base", "base", []))
-  await step(ctx, `agentbox ${pkg.version}`, () => installSelf())
+  await step(ctx, `agentbox ${pkg.version}`, async () => {
+    const outcome = await installSelf()
+    // A new binary means a new config server.
+    if (outcome === "changed") ctx.state["unit.agentbox-config.service"] = "restart"
+    return outcome
+  })
   await step(ctx, `Node.js ${C.node.version}`, () =>
     script(ctx, "node", "node", [C.node.version], () =>
       binOk(["/usr/local/bin/node", "--version"], new RegExp(C.node.version)),
@@ -355,11 +361,13 @@ async function configure(ctx: Ctx, listen: "auto" | "lan" | "local"): Promise<Ne
     }
     const sudoers =
       "# agentbox: the service may run only the fixed `agentbox host apply` actions as root.\nagentbox ALL=(root) NOPASSWD: /usr/local/bin/agentbox host apply *\n"
-    if (await writeIfChanged("/etc/sudoers.d/agentbox.new", sudoers, { mode: 0o440 })) {
-      await execOk(["visudo", "-cf", "/etc/sudoers.d/agentbox.new"])
+    const sudoersFile = "/etc/sudoers.d/agentbox"
+    if (!existsSync(sudoersFile) || readFileSync(sudoersFile, "utf8") !== sudoers) {
+      await writeIfChanged(`${sudoersFile}.new`, sudoers, { mode: 0o440 })
+      await execOk(["visudo", "-cf", `${sudoersFile}.new`])
+      await execOk(["mv", "-f", `${sudoersFile}.new`, sudoersFile])
       changed = true
     }
-    await execOk(["mv", "-f", "/etc/sudoers.d/agentbox.new", "/etc/sudoers.d/agentbox"])
     if (changed) await systemctl("daemon-reload")
     const units = Object.keys(UNITS).filter(
       (u) =>
@@ -556,6 +564,10 @@ async function start(ctx: Ctx) {
 
   await step(ctx, "agentbox, Hermes UI and iroh gateway", async () => {
     let changed = false
+    // The config server owns this file afterwards; the gateway refuses to start without it.
+    const access = "/var/lib/agentbox/iroh-access/access.env"
+    if (!existsSync(access))
+      await writeIfChanged(access, renderAccess([], false), { mode: 0o640, owner: "agentbox" })
     const units = [
       "agentbox-config.service",
       "agentbox-iroh.service",
@@ -705,7 +717,7 @@ async function configureHermes(ctx: Ctx, paseoMcp: Artifact, bridge: Artifact | 
       ).trim(),
     }
     const current = existsSync(files.envPath) ? readFileSync(files.envPath, "utf8") : ""
-    if (Object.entries(env).some(([k, v]) => !current.includes(`${k}=${v}`))) {
+    if (Object.entries(env).some(([k, v]) => !current.includes(`${k}=${quoteEnv(v)}`))) {
       await files.setEnv(env)
       changed = true
     }

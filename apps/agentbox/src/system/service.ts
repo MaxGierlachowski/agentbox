@@ -122,11 +122,13 @@ export class SystemService {
         level: s.healthy ? "ok" : s.active ? "warn" : "fail",
         message: `${s.label}: ${s.message}`,
       })
-    // Only Caddy's LAN listener may face the network.
-    const ss = await exec(["ss", "-tulnH"], { timeoutMs: 5000 })
+    // TCP: only sshd and Caddy's LAN listener may face the network. UDP on all interfaces is
+    // expected from iroh-gateway (QUIC, authenticated, allow-listed) and Xvnc (:6901, dropped by
+    // agentbox-firewall); `ss` can't attribute sockets of other users here, so UDP isn't checked.
+    const ss = await exec(["ss", "-tlnH"], { timeoutMs: 5000 })
     const exposed = ss.stdout
       .split("\n")
-      .map((l) => l.trim().split(/\s+/)[4])
+      .map((l) => l.trim().split(/\s+/)[3])
       .filter((addr): addr is string => Boolean(addr))
       .filter((addr) => !/^(127\.0\.0\.\d+|\[::1\]|\[::ffff:127\.0\.0\.1\]):/.test(addr))
       .filter((addr) => !(this.config.listen === "lan" && addr.endsWith(":8443")))
@@ -135,8 +137,8 @@ export class SystemService {
       id: "network.exposure",
       level: exposed.length ? "fail" : "ok",
       message: exposed.length
-        ? `Unexpected listeners: ${exposed.join(", ")}`
-        : "Only expected ports face the network",
+        ? `Unexpected TCP listeners: ${exposed.join(", ")}`
+        : `Only ${this.config.listen === "lan" ? ":8443 and " : ""}sshd face the network (TCP)`,
     })
     checks.push({
       id: "runtime",

@@ -1,0 +1,33 @@
+{
+  "name": "iroh-fetch-linux-arm64-gnu",
+  "version": "0.6.4",
+  "description": "Native addon of iroh-fetch for linux-arm64-gnu (installed automatically by iroh-fetch)",
+  "license": "MIT",
+  "author": "poommin2543",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/irohkit/iroh-bridge.git",
+    "directory": "crates/node-client"
+  },
+  "homepage": "https://github.com/irohkit/iroh-bridge#readme",
+  "main": "iroh-fetch.linux-arm64-gnu.node",
+  "files": [
+    "iroh-fetch.linux-arm64-gnu.node"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "libc": [
+    "glibc"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

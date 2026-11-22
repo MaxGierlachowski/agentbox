@@ -1,0 +1,84 @@
+# Installs agentbox end to end on a fresh GitHub-hosted Ubuntu 24.04 x64 VM (real systemd):
+# install.sh → agentbox up → health of every service → claim → idempotent re-run → doctor.
+# Companion tarballs are built from the sibling repos' `v1` branches (or the given ref).
+name: E2E install (x64)
+
+on:
+  workflow_dispatch:
+    inputs:
+      companion_ref:
+        description: Branch of hermes-ui / paseo-multi-account / hermes-paseo-bridge
+        default: v1
+  push:
+    branches: [v1]
+    paths: [apps/agentbox/**, packages/**, scripts/**, catalog/**, .github/workflows/e2e-install.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      REF: ${{ inputs.companion_ref || 'v1' }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: agentbox }
+      - uses: actions/checkout@v4
+        with: { repository: MaxGierlachowski/hermes-ui, ref: "${{ env.REF }}", path: hermes-ui }
+      - uses: actions/checkout@v4
+        with: { repository: MaxGierlachowski/paseo-multi-account, ref: "${{ env.REF }}", path: paseo-multi-account }
+      - uses: actions/checkout@v4
+        with: { repository: MaxGierlachowski/hermes-paseo-bridge, ref: "${{ env.REF }}", path: hermes-paseo-bridge }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version-file: agentbox/package.json }
+      - name: Build release (local artifacts)
+        working-directory: agentbox
+        run: |
+          bun install --frozen-lockfile
+          (cd ../hermes-ui && npm ci --no-audit --no-fund)
+          (cd ../paseo-multi-account && npm ci --no-audit --no-fund)
+          bun scripts/release.ts --local --targets linux-x64
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Stage release files like GitHub Releases
+        run: |
+          V=$(jq -r .version agentbox/apps/agentbox/package.json)
+          sudo mkdir -p /artifacts /srv/rel/v$V
+          sudo cp agentbox/apps/agentbox/dist/release/* /artifacts/
+          sudo cp /artifacts/agentbox-linux-x64 /artifacts/SHA256SUMS /srv/rel/v$V/
+          echo "V=$V" >> "$GITHUB_ENV"
+      - name: Install and up
+        run: |
+          curl -fsSL file:///artifacts/install.sh | sudo AGENTBOX_BASE_URL=file:///srv/rel AGENTBOX_VERSION=$V \
+            AGENTBOX_ARTIFACTS=/artifacts/artifacts.local.json AGENTBOX_UP=1 AGENTBOX_LISTEN=lan sh | tee up.log
+          grep -q "Agentbox is running (9/9 services healthy)" up.log
+      - name: Health endpoints
+        run: |
+          for u in 7777/healthz 8080/healthz 8787/api/health 6767/api/health 9333/json/version; do
+            curl -fsS -o /dev/null "http://127.0.0.1:$u" && echo "ok $u"
+          done
+          curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8090/healthz
+          systemctl is-active agentbox.target agentbox-{config,caddy,iroh,hermes,hermes-ui,paseo,kasmvnc,chrome}
+      - name: Claim through the LAN listener
+        run: |
+          OTP=$(grep -oP '#otp=\K[a-z-]+' up.log | head -1)
+          IP=$(grep -oP 'https://\K[0-9.]+(?=:8443)' up.log | head -1)
+          code=$(curl -sk -o /dev/null -w '%{http_code}' "https://$IP:8443/browser/")
+          test "$code" = 401 || test "$code" = 302
+          curl -sk -c jar -X POST "https://$IP:8443/api/setup/claim" -H 'content-type: application/json' \
+            -H "origin: https://$IP:8443" \
+            -d "{\"otp\":\"$OTP\",\"name\":\"E2E\",\"email\":\"e2e@example.com\",\"password\":\"correct horse battery staple\"}" | jq -e .ok
+          test "$(curl -sk -o /dev/null -w '%{http_code}' "https://$IP:8443/setup/")" = 404
+          test "$(curl -sk -b jar -o /dev/null -w '%{http_code}' "https://$IP:8443/hermes/")" = 200
+          curl -sk -b jar "https://$IP:8443/api/rpc/system/services" | jq .
+      - name: Idempotent re-run
+        run: sudo AGENTBOX_ARTIFACTS=/artifacts/artifacts.local.json agentbox up | tee up2.log && grep -q noop up2.log
+      - name: Doctor
+        run: sudo agentbox doctor
+      - name: Logs on failure
+        if: failure()
+        run: sudo journalctl -u 'agentbox-*' --no-pager -n 300

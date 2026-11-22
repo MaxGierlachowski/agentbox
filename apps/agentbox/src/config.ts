@@ -73,9 +73,9 @@ export const paths = (c: Config) => ({
   proxySecret: join(c.etcDir, "proxy-secret"),
   irohDir: join(c.dataDir, "iroh"),
   /** Rendered allow list for iroh-gateway; a systemd path unit reloads the gateway on change. */
-  irohEnv: join(c.dataDir, "iroh", "access.env"),
-  /** Written by iroh-gateway's unit (ExecStartPost) from its stdout line IROH_ENDPOINT_ID=. */
-  irohEndpointId: join(c.dataDir, "iroh", "endpoint-id"),
+  irohEnv: join(c.dataDir, "iroh-access", "access.env"),
+  /** Cache of the gateway's endpoint id (read from its admin API). */
+  irohEndpointId: join(c.dataDir, "state", "iroh-endpoint-id"),
   browserLock: join(c.dataDir, "browser.lock"),
   hermesHome: join(c.home, ".hermes"),
   paseoHome: join(c.home, ".paseo"),

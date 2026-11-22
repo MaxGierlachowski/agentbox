@@ -73,15 +73,26 @@ export class DeviceService {
       }))
   }
 
-  endpointId(): string | null {
+  /** The gateway's endpoint id from its admin API (stable: derived from its persistent key). */
+  async endpointId(): Promise<string | null> {
     const file = paths(this.config).irohEndpointId
+    try {
+      const res = await fetch("http://127.0.0.1:8090/status", { signal: AbortSignal.timeout(2000) })
+      const id = ((await res.json()) as { endpoint_id?: string }).endpoint_id
+      if (id) {
+        if (!existsSync(file) || readFileSync(file, "utf8").trim() !== id)
+          await writeFileAtomic(file, `${id}\n`, 0o600)
+        return id
+      }
+    } catch {
+      // Gateway down: fall back to the last known id.
+    }
     if (!existsSync(file)) return null
-    const id = readFileSync(file, "utf8").trim()
-    return id || null
+    return readFileSync(file, "utf8").trim() || null
   }
 
   async pairStart(kind: "phone" | "laptop" | "other"): Promise<PairingWindow> {
-    const endpointId = this.endpointId()
+    const endpointId = await this.endpointId()
     if (!endpointId)
       throw new Error("The iroh gateway is not online yet. Check `systemctl status agentbox-iroh`.")
     const code = pairingCode()
