@@ -224,8 +224,28 @@ await expect(page.frameLocator("iframe").first().locator("canvas:visible").first
   timeout: 60_000,
 })
 highlight("browser")
+await pause(4000)
+endHighlight()
+// "Open full screen" shows the same stream in a whole window (here in the same tab).
+const fullScreen = page.getByRole("link", { name: /Open full screen/ })
+const streamUrl = await fullScreen.getAttribute("href")
+const linkBox = await fullScreen.boundingBox()
+if (linkBox)
+  await page.mouse.move(linkBox.x + linkBox.width / 2, linkBox.y + linkBox.height / 2, {
+    steps: 20,
+  })
+await pause(700)
+await page.goto(new URL(streamUrl ?? "/browser/", BOX).href)
+await expect(page.locator("canvas:visible").first()).toBeVisible({ timeout: 60_000 })
+// KasmVNC shows its side panel and a codec notice right after connecting; let them fade.
+await page.mouse.move(900, 450, { steps: 10 })
+await pause(3500)
+highlight("browser-full")
 await pause(5000)
 endHighlight()
+await page.goBack()
+await expect(next(page)).toBeVisible({ timeout: 30_000 })
+await pause(1000)
 await click(next(page))
 
 // ---- Install + Hermes UI -------------------------------------------------------------------------

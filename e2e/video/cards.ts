@@ -59,6 +59,7 @@ export const SHORT_CAPTIONS: Record<string, string> = {
   "toolkit-search": "Skills & MCP-Server aus der Bibliothek",
   "github-code": "GitHub-Login per Gerätecode",
   browser: "Ein gemeinsamer, eingeloggter Chrome",
+  "browser-full": "Der Chrome der Box, live gestreamt",
   "install-done": "Ein Klick installiert dein Toolkit",
   "hermes-ui": "Hermes UI: erste Aufgabe bereit",
   qr: "Handy koppeln per iroh",
@@ -108,8 +109,11 @@ export async function renderCards(dir: string) {
   )
   await shot("fast-x8", `<div class="badge">▶▶ ×8 Zeitraffer</div>`, true)
   await shot("fast-x24", `<div class="badge">▶▶ ×24 Zeitraffer</div>`, true)
-  for (const [label, text] of Object.entries(SHORT_CAPTIONS))
-    await shot(`caption-${label}`, `<div class="caption">${text}</div>`, true)
+  for (const [label, text] of Object.entries(SHORT_CAPTIONS)) {
+    // The terminal clip keeps a free band at the bottom for its caption (its top is the command).
+    const where = label === "install" ? ' style="top:auto;bottom:16px"' : ""
+    await shot(`caption-${label}`, `<div class="caption"${where}>${text}</div>`, true)
+  }
   await browser.close()
 }
 

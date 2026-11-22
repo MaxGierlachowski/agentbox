@@ -30,6 +30,7 @@ const work = join(OUT, "work")
 const cards = join(OUT, "cards")
 await rm(work, { recursive: true, force: true })
 await mkdir(work, { recursive: true })
+await rm(join(FINAL, "stills"), { recursive: true, force: true })
 await mkdir(join(FINAL, "stills"), { recursive: true })
 await renderCards(cards)
 
