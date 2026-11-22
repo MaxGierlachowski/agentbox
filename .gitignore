@@ -53,3 +53,6 @@ apps/agentbox/dist
 .build/
 e2e/*/.out/
 _site/
+e2e/browser/screenshots/
+e2e/test-results/
+e2e/playwright-report/
