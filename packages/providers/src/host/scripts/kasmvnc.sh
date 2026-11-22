@@ -57,7 +57,9 @@ desktop:
   resolution:
     width: 1600
     height: 900
-  allow_resize: true
+  # Fixed size: viewers (config UI panel, full screen, phone) scale it instead of resizing
+  # the desktop, which would leave Chrome at a smaller size.
+  allow_resize: false
 network:
   protocol: http
   interface: 127.0.0.1
@@ -98,6 +100,12 @@ xsetroot -solid '#20232a' 2>/dev/null || true
 exec openbox-session
 SH
 chmod 0755 "$AB_HOME/.vnc/xstartup"
+# Every window maximized and without decoration: the box's Chrome always fills the 1600x900
+# desktop (it would otherwise reopen at whatever size it remembers).
+install -d -o "$AB_USER" -g "$AB_USER" -m 0755 "$AB_HOME/.config" "$AB_HOME/.config/openbox"
+sed 's#<applications>#<applications><application class="*"><decor>no</decor><maximized>true</maximized></application>#' \
+  /etc/xdg/openbox/rc.xml >"$AB_HOME/.config/openbox/rc.xml"
+chown "$AB_USER:$AB_USER" "$AB_HOME/.config/openbox/rc.xml"
 touch "$AB_HOME/.vnc/.de-was-selected"
 
 # 3c. kasmpasswd: the wrapper exits if no user with write access exists, even with

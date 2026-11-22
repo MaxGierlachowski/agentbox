@@ -5,7 +5,7 @@ agents, a logged-in browser they share, and a UI you can reach from your laptop 
 an end-to-end encrypted peer-to-peer connection. No open ports, no accounts with us.
 
 ```sh
-curl -fsSL https://github.com/MaxGierlachowski/agentbox/releases/download/v0.1.0-rc.2/install.sh | sudo AGENTBOX_UP=1 sh
+curl -fsSL https://maxgierlachowski.github.io/agentbox/install.sh | sudo AGENTBOX_UP=1 sh
 ```
 
 Then open the URL `agentbox up` prints (`https://<lan-ip>:8443/setup/#otp=…`), enter the

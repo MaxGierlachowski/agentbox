@@ -58,46 +58,39 @@ async function buildSibling(repo: string, cmd: string[], dir: string): Promise<B
   return { name: repo, version, file, dir }
 }
 
-const built: Built[] = [
-  await buildSibling("hermes-ui", ["npm", "run", "release:tarball"], "hermes-ui"),
-  await buildSibling(
-    "paseo-multi-account",
-    ["npm", "run", "release:tarball"],
-    "paseo-multi-account",
-  ),
-  await buildSibling(
-    "hermes-paseo-bridge",
-    ["./scripts/release-tarball.sh"],
-    "hermes-paseo-bridge",
-  ),
-]
-const mcpFile = basename(PASEO_MCP.url)
-await $`curl -fsSL -o ${join(out, mcpFile)} ${PASEO_MCP.url}`
-built.unshift({ name: "paseo-mcp", version: PASEO_MCP.version, file: mcpFile, dir: "paseo-mcp" })
-
-const artifacts = []
-for (const b of built) {
-  const url = values.local
-    ? `file:///artifacts/${b.file}`
-    : b.name === "paseo-mcp"
-      ? PASEO_MCP.url
-      : `release:${b.file}`
-  artifacts.push({
-    name: b.name,
-    version: b.version,
-    url,
-    sha256: await sha256(join(out, b.file)),
-    dir: b.dir,
-  })
-}
-const manifest = `${JSON.stringify(artifacts, null, 2)}\n`
+// Releases install the companions from their own GitHub releases, pinned in
+// apps/agentbox/src/host/artifacts.json (scripts/pin-artifacts.ts). `--local` builds them from the
+// sibling checkouts instead, for testing unreleased changes in a container.
 if (values.local) {
-  await writeFile(join(out, "artifacts.local.json"), manifest)
+  const built: Built[] = [
+    await buildSibling("hermes-ui", ["npm", "run", "release:tarball"], "hermes-ui"),
+    await buildSibling(
+      "paseo-multi-account",
+      ["npm", "run", "release:tarball"],
+      "paseo-multi-account",
+    ),
+    await buildSibling(
+      "hermes-paseo-bridge",
+      ["./scripts/release-tarball.sh"],
+      "hermes-paseo-bridge",
+    ),
+  ]
+  const mcpFile = basename(PASEO_MCP.url)
+  await $`curl -fsSL -o ${join(out, mcpFile)} ${PASEO_MCP.url}`
+  built.unshift({ name: "paseo-mcp", version: PASEO_MCP.version, file: mcpFile, dir: "paseo-mcp" })
+  const artifacts = []
+  for (const b of built)
+    artifacts.push({
+      name: b.name,
+      version: b.version,
+      url: `file:///artifacts/${b.file}`,
+      sha256: await sha256(join(out, b.file)),
+      dir: b.dir,
+    })
+  await writeFile(join(out, "artifacts.local.json"), `${JSON.stringify(artifacts, null, 2)}\n`)
   console.log(
     `local artifacts in ${out} (mount as /artifacts, AGENTBOX_ARTIFACTS=/artifacts/artifacts.local.json)`,
   )
-} else {
-  await writeFile(join(root, "apps/agentbox/src/host/artifacts.json"), manifest)
 }
 
 const targets = values.targets.split(",").filter(Boolean)

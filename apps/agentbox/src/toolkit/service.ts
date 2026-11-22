@@ -45,8 +45,9 @@ const secretRef = (id: string, env: string) =>
 export class ToolkitService {
   constructor(private readonly d: ToolkitDeps) {}
 
+  /** Installed items, including the core ones `agentbox up` sets up (paseo MCP, git). */
   installed() {
-    return new Set(this.d.kv.get<string[]>(INSTALLED) ?? [])
+    return new Set([...CORE, ...(this.d.kv.get<string[]>(INSTALLED) ?? [])])
   }
 
   private markInstalled(ids: string[], removed: string[] = []) {

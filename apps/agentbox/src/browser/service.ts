@@ -28,9 +28,9 @@ export class BrowserService {
       running: unit.stdout.trim() === "active",
       cdp: await this.cdp(),
       locked: existsSync(this.lockPath),
-      // KasmVNC client settings: websocket under our prefix, connect at once, and resize the
-      // box's screen to the viewer (phones get a portrait desktop).
-      path: "/browser/?path=browser/websockify&autoconnect=1&resize=remote",
+      // KasmVNC client settings: websocket under our prefix, connect at once. The config UI
+      // scales the 1600x900 desktop to its panel.
+      path: "/browser/?path=browser/websockify&autoconnect=1",
     }
   }
 

@@ -78,7 +78,9 @@ export function ApplyStep() {
         running
           ? "Installing… you can open Hermes UI any time; the install keeps running."
           : result === "succeeded"
-            ? "Everything is installed."
+            ? todo.length
+              ? `Installed. ${todo.length} item${todo.length === 1 ? " waits" : "s wait"} for a sign-in or key; add ${todo.length === 1 ? "it" : "them"} again under Toolkit once connected.`
+              : "Everything is installed."
             : undefined
       }
     >
@@ -139,7 +141,10 @@ export function ApplyStep() {
                 <InlineRunLog
                   runId={runId}
                   title="Installing your toolkit"
-                  onFinished={setResult}
+                  onFinished={(status) => {
+                    setResult(status)
+                    void toolkit.refetch()
+                  }}
                 />
               ) : (
                 <Button

@@ -1,15 +1,11 @@
 # Tag vX.Y.Z[-rc.N] → build the release (companion tarballs, binaries, install.sh, SHA256SUMS)
-# and publish it as a GitHub (pre-)release. Companion repos are built from `companion_ref`.
+# and publish it as a GitHub (pre-)release. Companions come from their own pinned releases.
 name: Release
 
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
-    inputs:
-      companion_ref:
-        description: Branch or tag of hermes-ui / paseo-multi-account / hermes-paseo-bridge
-        default: v1
 
 permissions:
   contents: write
@@ -17,17 +13,9 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-24.04
-    env:
-      REF: ${{ inputs.companion_ref || 'v1' }}
     steps:
       - uses: actions/checkout@v4
         with: { path: agentbox }
-      - uses: actions/checkout@v4
-        with: { repository: MaxGierlachowski/hermes-ui, ref: "${{ env.REF }}", path: hermes-ui }
-      - uses: actions/checkout@v4
-        with: { repository: MaxGierlachowski/paseo-multi-account, ref: "${{ env.REF }}", path: paseo-multi-account }
-      - uses: actions/checkout@v4
-        with: { repository: MaxGierlachowski/hermes-paseo-bridge, ref: "${{ env.REF }}", path: hermes-paseo-bridge }
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - uses: oven-sh/setup-bun@v2
@@ -38,8 +26,6 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
         run: |
           bun install --frozen-lockfile
-          (cd ../hermes-ui && npm ci --no-audit --no-fund)
-          (cd ../paseo-multi-account && npm ci --no-audit --no-fund)
           bun scripts/release.ts --targets linux-x64,linux-arm64,darwin-arm64,darwin-x64
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
