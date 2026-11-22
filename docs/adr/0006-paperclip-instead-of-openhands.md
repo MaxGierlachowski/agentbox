@@ -1,6 +1,6 @@
 # 0006 – Paperclip instead of OpenHands
 
-- Status: superseded by 0007 (supersedes 0005)
+- Status: superseded by 0007, then by 0008 (supersedes 0005)
 - Date: 2026-10-05
 
 ## Context

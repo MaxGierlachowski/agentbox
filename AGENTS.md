@@ -1,18 +1,19 @@
 # agentbox
 
-Declarative agent workspaces on a single VM. A Bun binary owns Docker on the host, serves an
-embedded Next.js UI through Hono, and is reached over Tailscale. The full design lives in
-`docs/implementation-plan.md` (German); decisions are recorded in `docs/adr/`.
+An agent box on a single VM. A Bun binary installs and wires Hermes, Hermes UI, Paseo (+ paseo-mcp,
+paseo-multi-account, hermes-paseo-bridge), a streamed Chrome, Caddy and one iroh gateway, and serves
+the embedded Next.js config UI through Hono. The plan lives in `docs/plan/00-master-plan.md`,
+contracts between repos in `docs/plan/v1-interfaces.md`, decisions in `docs/adr/`.
 
 ## Layout
 
-- `apps/agentbox` – CLI, Hono server, composition root, binary build (`scripts/compile.ts`)
+- `apps/agentbox` – CLI (`up`, `serve`, `otp`, `api`, `connect`, `host apply`), Hono server, services, binary build (`scripts/compile.ts`)
 - `apps/web` – Next.js App Router, **static export only**
 - `packages/contract` – oRPC contract and run event types, shared by web and server
-- `packages/infra` – SQLite/Drizzle, age secret store, Docker, filesystem helpers
-- `packages/providers` – workspace/host providers: `browser` (headless Chromium + Playwright MCP), `cloudcli`, `metamcp`, `plane` (compose, secrets, bootstrap clients); Plane's release compose is vendored unchanged with an agentbox override
-- `packages/automation` – Plane → CloudCLI automation (picks up items labelled `claude`, runs a Claude Code session, moves the item to In Review)
-- `e2e` – end-to-end harnesses (need Docker): `bun run --cwd e2e browser` drives the browser over MCP like an agent
+- `packages/infra` – SQLite/Drizzle, age secret store, filesystem helpers
+- `packages/providers` – host installation: pinned component manifest, install scripts, systemd units, Caddyfile
+- `catalog/` – curated skills/MCPs/CLIs, role bundles, agentbox skills, SOUL templates (embedded in the binary)
+- `e2e` – mock API server for UI work, Playwright tests, VM acceptance harness (`e2e/vm/`)
 - `packages/ui` – design system: `src/components` is vendored shadcn/ui (Radix), `src/composites` is ours
 - `packages/typescript-config` – shared tsconfig presets
 
@@ -39,14 +40,13 @@ bun run --cwd packages/infra db:generate   # after changing src/db/schema.ts
   keep; build agentbox-specific pieces in `packages/ui/src/composites`.
 - Secrets never go into specs, logs, API responses or CLI arguments. Run logs pass through
   redaction in `RunService`.
-- Tailscale identity headers are trusted only on the `web.sock` listener; never on `127.0.0.1:7777`.
-  Requests carrying `Tailscale-Funnel-Request` are rejected there. Nothing is public (no Funnel).
-- Tool stack (ADR 0007): CloudCLI (:8443), Plane (:8444), MetaMCP (:8445), tailnet-only via
-  `tailscale serve`. Their admin accounts are created before they are served and registration is
-  closed afterwards. One shared admin password lives only in the secret store (`tools.admin`).
-- Claude Code reaches MetaMCP through `mcp-gateway` (Caddy hiding `/.well-known`, MetaMCP #277).
-- Keep `trustedDependencies: []` in the root package.json and the native externals in
-  `scripts/compile.ts`: ssh2's optional native modules crash compiled Bun binaries.
+- Every internal port binds 127.0.0.1 (v1 port map in `docs/plan/v1-interfaces.md`). Only Caddy's
+  LAN listener (:8443) may face the network. CDP (9333) is never proxied.
+- Edge headers (`X-Agentbox-Via`, `X-Iroh-Remote-Id`) count only together with the Caddy proxy
+  secret; `X-Iroh-Remote-Id` only on the iroh listener. Remote access is iroh only (ADR 0009).
+- Pin every component in the host manifest; never install "latest" at runtime.
+- Hermes is changed only through its CLI/config via `apps/agentbox/src/hermes` (no fork, no core patches).
+- Keep `trustedDependencies: []` in the root package.json.
 - UI copy is English.
 
 <!-- BEGIN:nextjs-agent-rules -->

@@ -1,6 +1,6 @@
 # 0005 – OpenHands target: Agent Canvas
 
-- Status: superseded by 0006
+- Status: superseded by 0006, then by 0008
 - Date: 2026-09-24
 
 ## Decision
