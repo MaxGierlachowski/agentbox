@@ -1,0 +1,30 @@
+{
+  "name": "iroh-fetch-darwin-arm64",
+  "version": "0.6.4",
+  "description": "Native addon of iroh-fetch for darwin-arm64 (installed automatically by iroh-fetch)",
+  "license": "MIT",
+  "author": "poommin2543",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/irohkit/iroh-bridge.git",
+    "directory": "crates/node-client"
+  },
+  "homepage": "https://github.com/irohkit/iroh-bridge#readme",
+  "main": "iroh-fetch.darwin-arm64.node",
+  "files": [
+    "iroh-fetch.darwin-arm64.node"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

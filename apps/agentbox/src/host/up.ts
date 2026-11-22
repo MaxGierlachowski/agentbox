@@ -668,8 +668,13 @@ async function configureHermes(ctx: Ctx, paseoMcp: Artifact, bridge: Artifact | 
     await files.setMcpServer("paseo", paseoServer)
     changed = true
   }
-  const hermes = (args: string[]) =>
-    asUser(["/usr/local/bin/hermes", ...args], { env: { HERMES_HOME } })
+  // Files written here as root (atomic renames) must belong to the service user before Hermes
+  // reads them.
+  const ownHermes = () => execOk(["chown", "-R", "agentbox:agentbox", HERMES_HOME])
+  const hermes = async (args: string[]) => {
+    await ownHermes()
+    return asUser(["/usr/local/bin/hermes", ...args], { env: { HERMES_HOME } })
+  }
   const settings: [string, string][] = [
     ["browser.cdp_url", "http://127.0.0.1:9333"],
     ["platforms.webhook.extra.host", "127.0.0.1"],
