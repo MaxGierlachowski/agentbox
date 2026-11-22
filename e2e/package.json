@@ -8,11 +8,11 @@
     "browser": "bun browser/run.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1",
-    "@workspace/providers": "workspace:*",
+    "@orpc/server": "^1.15.3",
     "@workspace/contract": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/bun": "latest",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "^5.9"
