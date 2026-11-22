@@ -6,6 +6,7 @@ export const runs = sqliteTable(
     id: text("id").primaryKey(),
     workspace: text("workspace").notNull(),
     kind: text("kind", { enum: ["plan", "apply", "verify"] }).notNull(),
+    title: text("title").notNull().default(""),
     status: text("status", {
       enum: ["pending", "running", "succeeded", "failed", "cancelled"],
     }).notNull(),
@@ -40,6 +41,58 @@ export const sessions = sqliteTable("sessions", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 })
 
+/** The box owner (v1 has exactly one user). `orgId` is the hook for later org sharing. */
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  /** argon2id hash. */
+  passwordHash: text("password_hash").notNull(),
+  role: text("role", { enum: ["owner"] }).notNull(),
+  orgId: text("org_id"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+})
+
+/** One-time passwords printed on the console: claiming the box, or resetting the owner password. */
+export const otps = sqliteTable("otps", {
+  id: text("id").primaryKey(),
+  /** SHA-256 of the normalized words. */
+  hash: text("hash").notNull(),
+  purpose: text("purpose", { enum: ["claim", "reset"] }).notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  usedAt: integer("used_at", { mode: "timestamp_ms" }),
+})
+
+/** Paired iroh clients (phones, laptops). Rendered into the gateway's allow list. */
+export const devices = sqliteTable("devices", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  kind: text("kind", { enum: ["phone", "laptop", "other", "edge"] }).notNull(),
+  irohId: text("iroh_id").notNull().unique(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  lastSeenAt: integer("last_seen_at", { mode: "timestamp_ms" }),
+  revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+})
+
+/** Open pairing windows: single-use code, stored hashed. */
+export const pairings = sqliteTable("pairings", {
+  id: text("id").primaryKey(),
+  codeHash: text("code_hash").notNull(),
+  kind: text("kind", { enum: ["phone", "laptop", "other"] }).notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  usedAt: integer("used_at", { mode: "timestamp_ms" }),
+})
+
+/** Small JSON documents: onboarding state, settings, catalog cache entries. */
+export const kv = sqliteTable("kv", {
+  key: text("key").primaryKey(),
+  value: text("value", { mode: "json" }).notNull(),
+  updatedAt: text("updated_at").notNull(),
+})
+
 /** One-time login links for browser access through an SSH tunnel. */
 export const loginLinks = sqliteTable("login_links", {
   id: text("id").primaryKey(),
@@ -68,24 +121,3 @@ export const auditLog = sqliteTable("audit_log", {
   action: text("action").notNull(),
   detail: text("detail", { mode: "json" }),
 })
-
-/** Plane work items handled by the Plane -> CloudCLI automation. */
-export const automationTasks = sqliteTable(
-  "automation_tasks",
-  {
-    id: text("id").primaryKey(), // Plane work item id
-    workspace: text("workspace").notNull(),
-    key: text("key").notNull(),
-    title: text("title").notNull(),
-    projectId: text("project_id").notNull(),
-    projectIdentifier: text("project_identifier").notNull(),
-    repo: text("repo").notNull(),
-    status: text("status", { enum: ["running", "review", "failed", "interrupted"] }).notNull(),
-    attempt: integer("attempt").notNull(),
-    sessionId: text("session_id"),
-    startedAt: text("started_at").notNull(),
-    finishedAt: text("finished_at"),
-    error: text("error"),
-  },
-  (t) => [index("automation_tasks_started_idx").on(t.startedAt)],
-)

@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1790247866317,
+      "when": 1795371083640,
       "tag": "0000_init",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1791662007060,
-      "tag": "0001_automation_tasks",
       "breakpoints": true
     }
   ]

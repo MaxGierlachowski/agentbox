@@ -58,8 +58,36 @@ export class SecretStore {
     return join(this.dir, "store.age")
   }
 
+  private get plainIdentityPath() {
+    return join(this.dir, "identity")
+  }
+
   async isInitialized() {
-    return Bun.file(this.identityPath).exists()
+    return (
+      (await Bun.file(this.identityPath).exists()) ||
+      (await Bun.file(this.plainIdentityPath).exists())
+    )
+  }
+
+  /**
+   * Unattended mode (v1): the identity is a plain file (0600, owned by the service user), so the
+   * store unlocks itself on boot. Secrets stay encrypted at rest; anyone who can read the identity
+   * file can decrypt them, which is the same trust boundary as the service user itself.
+   * Passphrase sealing (`init`/`unlock`) stays available for a later sealed mode.
+   */
+  async openUnattended() {
+    await mkdir(this.dir, { recursive: true, mode: 0o700 })
+    const file = Bun.file(this.plainIdentityPath)
+    let identity: string
+    if (await file.exists()) {
+      identity = (await file.text()).trim()
+    } else {
+      if (await Bun.file(this.identityPath).exists())
+        throw new Error("Secret store is passphrase-sealed; unlock it with the passphrase")
+      identity = await age.generateX25519Identity()
+      await writeFileAtomic(this.plainIdentityPath, `${identity}\n`, 0o600)
+    }
+    await this.load(identity)
   }
 
   get sealed() {
@@ -85,6 +113,10 @@ export class SecretStore {
     } catch {
       throw new Error("Wrong passphrase")
     }
+    await this.load(identity)
+  }
+
+  private async load(identity: string) {
     const entries = new Map<string, SecretEntry>()
     if (await Bun.file(this.storePath).exists()) {
       const s = new age.Decrypter()
