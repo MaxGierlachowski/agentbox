@@ -36,7 +36,7 @@ export function compose(
 }
 
 const blockRe = () =>
-  new RegExp(`${escape(SOUL_GENERATED_START)}[\\s\\S]*?${escape(SOUL_GENERATED_END)}`, "g")
+  new RegExp(`${escapeRe(SOUL_GENERATED_START)}[\\s\\S]*?${escapeRe(SOUL_GENERATED_END)}`, "g")
 function escapeRe(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
