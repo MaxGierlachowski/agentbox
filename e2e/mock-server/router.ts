@@ -1,23 +1,22 @@
 import { implement, ORPCError, withEventMeta } from "@orpc/server"
-import {
-  type CatalogHit,
-  type CliStatus,
-  contract,
-  type LoginFlow,
-  type ProfileDraft,
-  type RoleId,
-  type RunEvent,
-  type RunSummary,
-  type Selection,
+import type {
+  CatalogHit,
+  CliStatus,
+  LoginFlow,
+  ProfileDraft,
+  RunEvent,
+  RunSummary,
+  Selection,
 } from "@workspace/contract"
-import { BASE, BUNDLES, byId, CATALOG } from "./catalog"
+import { BASE, BUNDLES, bundleIds, byId, CATALOG } from "./catalog"
+import { contractNext } from "./contract-next"
 import type { MockState, RunEntry } from "./state"
 
 export interface MockContext {
   session: string | null
 }
 
-const os = implement(contract).$context<MockContext>()
+const os = implement(contractNext).$context<MockContext>()
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const now = () => new Date().toISOString()
@@ -51,7 +50,20 @@ export function createRouter(getState: () => MockState) {
     const item = byId.get(id)
     if (!item) return null
     const installed = selectionIds(s().installed).includes(id)
-    return { ...item, reason, installed }
+    return {
+      id: item.id,
+      kind: item.kind,
+      name: item.name,
+      summary: item.summary,
+      tier: item.tier,
+      source: item.source,
+      licence: item.licence,
+      roles: item.roles,
+      needsAuth: item.auth.type !== "none",
+      reason,
+      installed,
+      homepage: item.homepage ?? null,
+    }
   }
 
   // ---- runs --------------------------------------------------------------------------------
@@ -132,6 +144,11 @@ export function createRouter(getState: () => MockState) {
     if (entry.kind === "claude" && !entry.pasted) return f
     entry.pollsLeft -= 1
     if (entry.pollsLeft > 0) return f
+    if (entry.kind === "oauth") {
+      s().oauth.add(entry.item ?? "")
+      Object.assign(f, { state: "done", user: s().owner?.email ?? "you", message: null })
+      return f
+    }
     if (entry.kind === "claude") {
       const acct = s().ai.accounts.find((x) => x.slug === entry.slug)
       const email = `${entry.slug}@example.org`
@@ -464,12 +481,14 @@ export function createRouter(getState: () => MockState) {
               !q ||
               i.name.toLowerCase().includes(q) ||
               i.summary.toLowerCase().includes(q) ||
-              i.id.includes(q),
+              i.id.includes(q) ||
+              i.tags.some((t) => t.includes(q)),
           )
           .map((i) => ({
             score:
               ({ T0: 4, T1: 3, T2: 2, T3: 1 } as const)[i.tier] *
-              (input.roles?.some((r) => i.roles.includes(r)) ? 1.5 : 1),
+              (input.roles?.some((r) => i.roles.includes(r)) ? 1.5 : 1) *
+              (i.name.toLowerCase().startsWith(q) ? 2 : 1),
             i,
           }))
           .sort((x, y) => y.score - x.score)
@@ -479,34 +498,46 @@ export function createRouter(getState: () => MockState) {
       get: a.catalog.get.handler(({ input }) => {
         const h = hit(input.id)
         if (!h) throw new ORPCError("NOT_FOUND", { message: `Unknown item ${input.id}` })
-        return { ...h, detail: null }
+        return { ...h, detail: byId.get(input.id) }
       }),
       suggest: a.catalog.suggest.handler(async ({ input }) => {
         await sleep(input.refine ? 900 : 200)
         const reasons: Record<string, string> = {}
-        for (const id of BASE) reasons[id] = "Part of every box"
-        const roles: RoleId[] = input.roles.length ? input.roles : ["custom"]
-        for (const r of roles) {
-          const b = BUNDLES[r]
-          if (!b) continue
-          for (const id of b.ids) reasons[id] ??= `In the ${b.label} bundle`
+        const selected = new Set<string>()
+        const bundles = [
+          ...(BASE ? [BASE] : []),
+          ...BUNDLES.filter((b) => b.id !== "base" && b.roles.some((r) => input.roles.includes(r))),
+        ]
+        for (const b of bundles) {
+          for (const id of bundleIds(b)) {
+            const optional = b.opt_in.includes(id)
+            if (!optional) {
+              selected.add(id)
+              reasons[id] = b.id === "base" ? "Part of every box" : `In the ${b.name} bundle`
+            } else if (!selected.has(id)) {
+              reasons[id] ??= `Optional in the ${b.name} bundle`
+            }
+          }
         }
-        if (input.refine && input.about?.toLowerCase().includes("sentry")) {
+        if (
+          input.refine &&
+          input.about?.toLowerCase().includes("sentry") &&
+          byId.has("mcp.sentry")
+        ) {
+          selected.add("mcp.sentry")
           reasons["mcp.sentry"] = "You mentioned Sentry"
         }
-        const ids = Object.keys(reasons)
-        const primary = roles.map((r) => BUNDLES[r]).find(Boolean)
+        const primary = bundles.find((b) => b.id !== "base") ?? BASE
+        const sites = [...new Set(bundles.flatMap((b) => b.suggested_sites.map((x) => x.url)))]
         return {
-          selection: toSelection(ids),
+          selection: toSelection([...selected]),
           reasons,
-          firstTask: primary?.firstTask ?? "Tell me what you can do on this box.",
-          firstTaskAlternatives: primary?.alternatives ?? [
-            "Plan my week",
-            "Summarise a document",
-            "Set up a daily brief",
-          ],
-          suggestedSites: [...new Set(roles.flatMap((r) => BUNDLES[r]?.sites ?? []))],
-          items: ids.map((id) => hit(id, reasons[id])).filter((x): x is CatalogHit => !!x),
+          firstTask: primary?.first_task ?? "Tell me what you can do on this box.",
+          firstTaskAlternatives: primary ? [...primary.first_task_alternatives] : [],
+          suggestedSites: sites,
+          items: Object.keys(reasons)
+            .map((id) => hit(id, reasons[id]))
+            .filter((x): x is CatalogHit => !!x),
         }
       }),
     },
@@ -517,13 +548,23 @@ export function createRouter(getState: () => MockState) {
       })),
       apply: a.toolkit.apply.handler(({ input }) => {
         const add = input.add.filter((id) => !selectionIds(s().installed).includes(id))
+        for (const [id, values] of Object.entries(input.env ?? {})) {
+          s().envSet.set(id, Object.keys(values))
+        }
         const steps = [
           ...add.map((id) => ({
             provider: id,
             lines: id.startsWith("cli.")
               ? [`apt-get install -y ${id.slice(4)}`, "Unpacking…", "Setting up…", "done"]
               : id.startsWith("mcp.")
-                ? [`hermes mcp add ${id.slice(4)}`, "registered with Hermes", "connected"]
+                ? [
+                    `hermes mcp add ${id.slice(4)}`,
+                    ...(input.env?.[id]
+                      ? [`env: ${Object.keys(input.env[id] ?? {}).join(", ")} (stored encrypted)`]
+                      : []),
+                    "registered with Hermes",
+                    "connected",
+                  ]
                 : [
                     `fetch ${id.slice(6)} @ pinned sha`,
                     `copied to ~/.hermes/skills/${id.slice(6)}`,
@@ -553,6 +594,29 @@ export function createRouter(getState: () => MockState) {
             }
           }
         })
+      }),
+      connect: a.toolkit.connect.handler(({ input }) => {
+        const item = byId.get(input.id)
+        if (!item) throw new ORPCError("NOT_FOUND", { message: `Unknown item ${input.id}` })
+        if (item.auth.type !== "oauth")
+          throw new ORPCError("BAD_REQUEST", { message: `${item.name} does not use OAuth` })
+        const flow: LoginFlow = {
+          flowId: rid("flow"),
+          url: `https://auth.example.org/authorize?client=${encodeURIComponent(item.id)}`,
+          code: null,
+          needsPaste: false,
+          state: "waiting",
+          message: "Finish signing in in the box browser",
+          user: null,
+        }
+        s().flows.set(flow.flowId, {
+          flow,
+          kind: "oauth",
+          pollsLeft: 3,
+          pasted: true,
+          item: item.id,
+        })
+        return flow
       }),
     },
     soul: {

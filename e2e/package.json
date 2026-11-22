@@ -11,8 +11,10 @@
     "test:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@orpc/contract": "^1.15.3",
     "@orpc/server": "^1.15.3",
-    "@workspace/contract": "workspace:*"
+    "@workspace/contract": "workspace:*",
+    "zod": "^4.6.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
