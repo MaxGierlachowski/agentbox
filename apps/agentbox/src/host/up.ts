@@ -105,8 +105,21 @@ async function script(
     throw new Error(`${name} install failed (exit ${r.code}):\n    ${tail}`)
   }
   ctx.state[key] = stamp
+  // A changed install (new version, new config) takes effect on the next start of its service.
+  for (const unit of SCRIPT_UNITS[key] ?? []) ctx.state[`unit.${unit}`] = "restart"
   await saveState(ctx.state)
   return "changed"
+}
+
+/** Services to restart when an install script ran again (upgrade or changed configuration). */
+const SCRIPT_UNITS: Record<string, string[]> = {
+  node: ["agentbox-paseo.service", "agentbox-hermes-ui.service"],
+  paseo: ["agentbox-paseo.service"],
+  caddy: ["agentbox-caddy.service"],
+  iroh: ["agentbox-iroh.service"],
+  kasmvnc: ["agentbox-kasmvnc.service", "agentbox-chrome.service"],
+  browser: ["agentbox-chrome.service"],
+  hermes: ["agentbox-hermes.service"],
 }
 
 const binOk = async (argv: string[], match?: RegExp) => {

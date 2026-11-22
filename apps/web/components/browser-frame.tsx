@@ -7,6 +7,7 @@ import { toast } from "@workspace/ui/components/sonner"
 import { Switch } from "@workspace/ui/components/switch"
 import { cn } from "@workspace/ui/lib/utils"
 import { ExternalLinkIcon, HandIcon, MonitorOffIcon } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import { errorMessage } from "@/lib/errors"
 import { orpc } from "@/lib/orpc"
 
@@ -77,13 +78,52 @@ export function BrowserFrame({ className }: { className?: string }) {
           The browser is not running. Check Settings → Doctor.
         </div>
       ) : (
-        <iframe
-          src={path}
-          title="The box's browser"
-          className="min-h-0 w-full flex-1 bg-white"
-          allow="clipboard-read; clipboard-write; fullscreen"
-        />
+        <ScaledDesktop src={path} />
       )}
+    </div>
+  )
+}
+
+/** The box's desktop size (KasmVNC `desktop.resolution`, set by agentbox up). */
+const DESKTOP = { width: 1600, height: 900 }
+
+/**
+ * Shows the whole box desktop in a smaller panel: the client renders at the desktop's native size
+ * and is scaled down with CSS (pointer input maps through the transform).
+ */
+function ScaledDesktop({ src }: { src: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [fit, setFit] = useState({ scale: 0, x: 0, y: 0 })
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return
+      const { width, height } = entry.contentRect
+      const scale = Math.min(width / DESKTOP.width, height / DESKTOP.height)
+      setFit({
+        scale,
+        x: (width - DESKTOP.width * scale) / 2,
+        y: (height - DESKTOP.height * scale) / 2,
+      })
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return (
+    <div ref={ref} className="relative min-h-0 w-full flex-1 overflow-hidden bg-neutral-900">
+      <iframe
+        src={src}
+        title="The box's browser"
+        className="absolute top-0 left-0 origin-top-left border-0 bg-white"
+        style={{
+          width: DESKTOP.width,
+          height: DESKTOP.height,
+          transform: `translate(${fit.x}px, ${fit.y}px) scale(${fit.scale})`,
+          visibility: fit.scale ? "visible" : "hidden",
+        }}
+        allow="clipboard-read; clipboard-write; fullscreen"
+      />
     </div>
   )
 }
