@@ -21,30 +21,13 @@ import {
   SoulPlaceholder,
   SoulRole,
 } from "../packages/contract/src/catalog"
+import { contract } from "../packages/contract/src/contract"
 
 /** Procedures the agentbox skills may call through `agentbox api <procedure>`. */
-export const AGENTBOX_API_PROCEDURES = [
-  "system.info",
-  "system.doctor",
-  "onboarding.get",
-  "catalog.search",
-  "catalog.get",
-  "toolkit.apply",
-  "runs.get",
-  "clis.status",
-  "clis.authStart",
-  "ssh.status",
-  "ssh.generate",
-  "ssh.register",
-  "repos.list",
-  "repos.clone",
-  "profiles.list",
-  "profiles.create",
-  "browser.status",
-  "browser.setLock",
-  "devices.list",
-  "devices.pairStart",
-] as const
+/** Every `group.procedure` of the agentbox API contract (what `agentbox api` accepts). */
+export const AGENTBOX_API_PROCEDURES: string[] = Object.entries(contract).flatMap(
+  ([group, procs]) => Object.keys(procs as Record<string, unknown>).map((p) => `${group}.${p}`),
+)
 
 export interface CatalogValidation {
   errors: string[]
