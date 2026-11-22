@@ -29,7 +29,7 @@ URL="https://nodejs.org/dist/v$VERSION"
 
 for p in curl ca-certificates; do
   dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || {
-    export DEBIAN_FRONTEND=noninteractive; apt-get update -qq; apt-get install -y -qq --no-install-recommends curl ca-certificates >/dev/null; break; }
+    export DEBIAN_FRONTEND=noninteractive; apt-get -o DPkg::Lock::Timeout=600 update -qq; apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends curl ca-certificates >/dev/null; break; }
 done
 
 if [ -x "$DEST/bin/node" ] && [ "$("$DEST/bin/node" --version)" = "v$VERSION" ]; then

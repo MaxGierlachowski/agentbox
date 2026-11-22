@@ -23,7 +23,7 @@ arch="$(dpkg --print-architecture)"
 
 # prerequisites (present on Ubuntu server images, missing in minimal containers)
 _missing=""; for _p in curl ca-certificates iptables; do dpkg -s "$_p" >/dev/null 2>&1 || _missing="$_missing $_p"; done
-if [ -n "$_missing" ]; then apt-get update -qq; DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends $_missing >/dev/null; fi
+if [ -n "$_missing" ]; then apt-get -o DPkg::Lock::Timeout=600 update -qq; DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends $_missing >/dev/null; fi
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -41,10 +41,10 @@ if [[ "$installed" != "${KASMVNC_VERSION}"* ]]; then
     "https://github.com/kasmtech/KasmVNC/releases/download/v${KASMVNC_VERSION}/${deb}"
   echo "${KASMVNC_SHA256[$arch]}  $tmp/$deb" | sha256sum -c -
   chmod 0644 "$tmp/$deb"; chmod 0755 "$tmp"   # _apt sandbox user must read the file
-  apt-get update -qq
-  apt-get install -y -qq --no-install-recommends "$tmp/$deb" openbox xauth openssl >/dev/null
+  apt-get -o DPkg::Lock::Timeout=600 update -qq
+  apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends "$tmp/$deb" openbox xauth openssl >/dev/null
 else
-  { dpkg -s openbox && dpkg -s xauth && dpkg -s openssl; } >/dev/null 2>&1 || { apt-get update -qq; apt-get install -y -qq --no-install-recommends openbox xauth openssl >/dev/null; }
+  { dpkg -s openbox && dpkg -s xauth && dpkg -s openssl; } >/dev/null 2>&1 || { apt-get -o DPkg::Lock::Timeout=600 update -qq; apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends openbox xauth openssl >/dev/null; }
 fi
 
 # 3. pre-seed the wrapper's first-run state (as the service user, files owned by it)

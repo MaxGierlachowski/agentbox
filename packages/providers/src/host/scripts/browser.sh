@@ -38,7 +38,7 @@ need() { local p; for p in "$@"; do dpkg -s "$p" >/dev/null 2>&1 || echo "$p"; d
 
 install_apt() {
   local missing; missing="$(need ca-certificates curl gnupg)"
-  if [ -n "$missing" ]; then apt-get update -qq; apt-get install -y -qq --no-install-recommends $missing >/dev/null; fi
+  if [ -n "$missing" ]; then apt-get -o DPkg::Lock::Timeout=600 update -qq; apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends $missing >/dev/null; fi
 
   local tmp; tmp="$(mktemp -d)"
   curl -fsSL --retry 3 "$GOOGLE_KEY_URL" -o "$tmp/key.pub"
@@ -66,8 +66,8 @@ EOF
 
   local want; want="$(need google-chrome-stable fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji)"
   if [ -n "$want" ]; then
-    apt-get update -qq
-    apt-get install -y -qq $want >/dev/null
+    apt-get -o DPkg::Lock::Timeout=600 update -qq
+    apt-get -o DPkg::Lock::Timeout=600 install -y -qq $want >/dev/null
   fi
   BROWSER_BIN=/usr/bin/google-chrome-stable
 }
@@ -79,7 +79,7 @@ install_cft() {
   BROWSER_BIN=$dest/chrome-$plat/chrome
   if [ ! -x "$BROWSER_BIN" ]; then
     local missing; missing="$(need ca-certificates curl unzip)"
-    if [ -n "$missing" ]; then apt-get update -qq; apt-get install -y -qq --no-install-recommends $missing >/dev/null; fi
+    if [ -n "$missing" ]; then apt-get -o DPkg::Lock::Timeout=600 update -qq; apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends $missing >/dev/null; fi
     local tmp; tmp="$(mktemp -d)"
     curl -fsSL --retry 3 -o "$tmp/c.zip" \
       "https://storage.googleapis.com/chrome-for-testing-public/$CFT_VERSION/$plat/chrome-$plat.zip"
@@ -97,8 +97,8 @@ install_cft() {
       fi
       pkgs+=("$p")
     done < <(sed -E 's/ *\|.*//; s/ *\(.*//' "$dest/chrome-$plat/deb.deps")
-    apt-get install -y -qq --no-install-recommends "${pkgs[@]}" >/dev/null
-    apt-get install -y -qq --no-install-recommends fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji >/dev/null
+    apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends "${pkgs[@]}" >/dev/null
+    apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji >/dev/null
     # setuid sandbox helper next to the binary (Chrome looks for ./chrome-sandbox): needed where
     # unprivileged user namespaces are restricted (Ubuntu 24.04 AppArmor default) and the
     # google-chrome AppArmor profile does not match this path.

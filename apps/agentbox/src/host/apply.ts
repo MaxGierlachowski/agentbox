@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { COMPONENTS, SCRIPTS } from "@workspace/providers"
 import { exec } from "../exec"
-import { debArch } from "./system"
+import { debArch, HOST_LOCK } from "./system"
 
 /** Units the service may restart through sudo (`agentbox host apply restart <id>`). */
 const RESTARTABLE: Record<string, string> = {
@@ -21,7 +21,8 @@ async function runScript(name: keyof typeof SCRIPTS, args: string[]) {
   try {
     const file = join(dir, `${name}.sh`)
     await writeFile(file, SCRIPTS[name], { mode: 0o700 })
-    const r = await exec(["bash", file, ...args], {
+    // One host change at a time (apt/dpkg can't run twice); `agentbox up` takes the same lock.
+    const r = await exec(["flock", "-w", "1800", HOST_LOCK, "bash", file, ...args], {
       env: { DEBIAN_FRONTEND: "noninteractive" },
       timeoutMs: 20 * 60_000,
       onLine: (l) => console.log(l),

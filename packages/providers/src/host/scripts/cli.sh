@@ -9,7 +9,7 @@ apt_install() {
   local missing=() p
   for p in "$@"; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || missing+=("$p"); done
   [ "${#missing[@]}" -eq 0 ] && return 0
-  apt-get update -qq && apt-get install -y -qq --no-install-recommends "${missing[@]}" >/dev/null
+  apt-get -o DPkg::Lock::Timeout=600 update -qq && apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends "${missing[@]}" >/dev/null
 }
 case "$PLAN" in
   cli.git) apt_install git ;;

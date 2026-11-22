@@ -4,6 +4,9 @@ import { chmod, chown, mkdir, writeFile } from "node:fs/promises"
 import { dirname } from "node:path"
 import { type ExecOptions, exec, execOk } from "../exec"
 
+/** Serializes host changes (apt/dpkg) between `agentbox up` and `agentbox host apply`. */
+export const HOST_LOCK = "/run/lock/agentbox-host.lock"
+
 export const SVC_USER = "agentbox"
 export const SVC_HOME = "/home/agentbox"
 

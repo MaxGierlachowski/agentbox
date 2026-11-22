@@ -17,6 +17,7 @@ import {
   asUser,
   asUserOk,
   debArch,
+  HOST_LOCK,
   networkFacts,
   osRelease,
   persistentSecret,
@@ -91,7 +92,7 @@ async function script(
   const file = join(ctx.work, `${name}.sh`)
   await writeFile(file, SCRIPTS[name], { mode: 0o700 })
   const lines: string[] = []
-  const r = await exec(["bash", file, ...args], {
+  const r = await exec(["flock", "-w", "1800", HOST_LOCK, "bash", file, ...args], {
     env: { ...env, DEBIAN_FRONTEND: "noninteractive" },
     timeoutMs: 45 * 60_000,
     onLine: (l) => {

@@ -11,8 +11,8 @@ missing=()
 for p in "${PKGS[@]}"; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || missing+=("$p"); done
 if [ "${#missing[@]}" -gt 0 ]; then
   log "apt install ${missing[*]}"
-  apt-get update -qq
-  apt-get install -y -qq --no-install-recommends "${missing[@]}" >/dev/null
+  apt-get -o DPkg::Lock::Timeout=600 update -qq
+  apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends "${missing[@]}" >/dev/null
 fi
 
 # Service user (agents, Hermes, Paseo, browser) and edge user (Caddy, iroh-gateway).

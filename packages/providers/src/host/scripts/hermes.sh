@@ -53,8 +53,8 @@ for p in "${APT_PKGS[@]}"; do dpkg-query -W -f='${Status}' "$p" 2>/dev/null | gr
 if [ "${#missing[@]}" -gt 0 ]; then
   log "apt install ${missing[*]}"
   export DEBIAN_FRONTEND=noninteractive
-  apt-get update -qq
-  apt-get install -y -qq --no-install-recommends "${missing[@]}" >/dev/null
+  apt-get -o DPkg::Lock::Timeout=600 update -qq
+  apt-get -o DPkg::Lock::Timeout=600 install -y -qq --no-install-recommends "${missing[@]}" >/dev/null
 fi
 
 # ---------------------------------------------------------------- service user
