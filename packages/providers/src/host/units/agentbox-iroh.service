@@ -1,0 +1,42 @@
+[Unit]
+Description=agentbox: iroh gateway (remote access, paired devices only)
+After=network-online.target agentbox-caddy.service agentbox-firewall.service
+Wants=network-online.target
+Requires=agentbox-firewall.service
+PartOf=agentbox.target
+
+[Service]
+Type=simple
+User=agentbox-edge
+Group=agentbox-edge
+Environment=BACKEND_URL=http://127.0.0.1:8081
+Environment=IROH_KEY_FILE=/var/lib/agentbox/iroh/gateway.key
+# Allow lists rendered by agentbox; re-read on SIGHUP (agentbox-iroh-reload.path).
+Environment=IROH_CONFIG_FILE=/var/lib/agentbox/iroh-access/access.env
+Environment=IROH_ADMIN_ADDR=127.0.0.1:8090
+Environment=RUST_LOG=iroh_gateway=info
+EnvironmentFile=-/etc/agentbox/env/iroh.env
+ExecStart=/usr/local/bin/iroh-gateway
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=2
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ReadWritePaths=/var/lib/agentbox/iroh
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=agentbox.target

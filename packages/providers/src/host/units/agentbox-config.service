@@ -1,0 +1,28 @@
+[Unit]
+Description=agentbox: config server and API (127.0.0.1:7777)
+After=network-online.target
+Wants=network-online.target
+PartOf=agentbox.target
+
+[Service]
+Type=simple
+User=agentbox
+Group=agentbox
+WorkingDirectory=/home/agentbox
+Environment=HOME=/home/agentbox
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+Environment=DISABLE_AUTOUPDATER=1
+ExecStart=/usr/local/bin/agentbox serve
+# /run/agentbox holds the CLI token (0640, group agentbox: root and the service user can call the API).
+RuntimeDirectory=agentbox
+RuntimeDirectoryMode=0750
+RuntimeDirectoryPreserve=yes
+Restart=always
+RestartSec=2
+TimeoutStopSec=20
+# Needs sudo for the fixed `agentbox host apply` actions, so no NoNewPrivileges.
+ProtectSystem=full
+UMask=0027
+
+[Install]
+WantedBy=agentbox.target

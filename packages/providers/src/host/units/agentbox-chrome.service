@@ -1,0 +1,32 @@
+[Unit]
+Description=agentbox: shared Chrome on display :1 (CDP 127.0.0.1:9333)
+BindsTo=agentbox-kasmvnc.service
+After=agentbox-kasmvnc.service
+PartOf=agentbox.target
+
+[Service]
+Type=simple
+User=agentbox
+Group=agentbox
+WorkingDirectory=/home/agentbox
+Environment=HOME=/home/agentbox DISPLAY=:1
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 100); do [ -S /tmp/.X11-unix/X1 ] && exit 0; sleep 0.2; done; echo "no X display :1" >&2; exit 1'
+ExecStart=/usr/local/bin/agentbox-chrome \
+  --user-data-dir=/var/lib/agentbox/chrome-profile \
+  --remote-debugging-address=127.0.0.1 \
+  --remote-debugging-port=9333 \
+  --no-first-run \
+  --no-default-browser-check \
+  --disable-dev-shm-usage \
+  --start-maximized \
+  --password-store=basic
+# Clean shutdown through CDP Browser.close flushes cookies before the process exits.
+ExecStop=/usr/bin/python3 /usr/local/lib/agentbox/chrome-cdp-close.py $MAINPID
+KillSignal=SIGTERM
+KillMode=mixed
+TimeoutStopSec=30
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=agentbox.target

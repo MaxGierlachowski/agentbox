@@ -37,7 +37,7 @@ const normalizeCode = (code: string) => code.toUpperCase().replace(/[^0-9A-Z]/g,
  * - otherwise: only paired endpoint ids
  */
 export function renderAccess(irohIds: string[], windowOpen: boolean) {
-  const lines = ["# Rendered by agentbox. Do not edit."]
+  const lines = ["# Rendered by agentbox. Do not edit.", "BACKEND_URL=http://127.0.0.1:8081"]
   if (windowOpen) {
     lines.push("IROH_ALLOW_CLIENTS=", "IROH_ALLOW_PATHS=/")
   } else if (irohIds.length === 0) {

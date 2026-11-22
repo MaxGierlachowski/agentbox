@@ -12,6 +12,8 @@ import { Auth, edgeVia } from "./auth"
 import { generateOtp, hashOtp, normalizeOtp } from "./otp"
 
 const PROXY = "proxy-secret-for-tests"
+const PHONE1 = "a".repeat(64)
+const PHONE2 = "b".repeat(64)
 let dir: string
 let config: Config
 
@@ -211,14 +213,14 @@ test("pairing: a code pairs one iroh id once; revoke removes access", async () =
       via: "iroh",
       headers: { "x-iroh-remote-id": id },
     })
-  expect((await redeem("phone-1", "WRONGCODE")).status).toBe(401)
-  expect((await redeem("phone-1", win.code.toLowerCase())).status).toBe(200)
-  expect((await redeem("phone-2", win.code)).status).toBe(401)
-  expect(await readFile(paths(config).irohEnv, "utf8")).toContain("IROH_ALLOW_CLIENTS=phone-1\n")
+  expect((await redeem(PHONE1, "WRONGCODE")).status).toBe(401)
+  expect((await redeem(PHONE1, win.code.toLowerCase())).status).toBe(200)
+  expect((await redeem(PHONE2, win.code)).status).toBe(401)
+  expect(await readFile(paths(config).irohEnv, "utf8")).toContain(`IROH_ALLOW_CLIENTS=${PHONE1}\n`)
 
   const check = await call("/api/auth/check", {
     via: "iroh",
-    headers: { "x-iroh-remote-id": "phone-1" },
+    headers: { "x-iroh-remote-id": PHONE1 },
   })
   expect(check.status).toBe(200)
   expect(check.headers.get("x-agentbox-user")).toBe("ada@example.com")
@@ -226,7 +228,7 @@ test("pairing: a code pairs one iroh id once; revoke removes access", async () =
   const [device] = devices.list()
   expect(await devices.revoke(device?.id as string)).toBe(true)
   expect(
-    (await call("/api/auth/check", { via: "iroh", headers: { "x-iroh-remote-id": "phone-1" } }))
+    (await call("/api/auth/check", { via: "iroh", headers: { "x-iroh-remote-id": PHONE1 } }))
       .status,
   ).toBe(401)
   expect(await readFile(paths(config).irohEnv, "utf8")).toContain("IROH_ALLOW_PATHS=/__closed__")

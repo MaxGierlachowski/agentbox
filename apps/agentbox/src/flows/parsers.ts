@@ -12,23 +12,20 @@ export function ghParser(verify: FlowParser["verify"]): FlowParser {
   return {
     parse: (out) => ({
       code: lastMatch(out, /one-time code:\s*([A-Z0-9]{4}-[A-Z0-9]{4})/)?.[1],
-      url: lastMatch(out, /(https:\/\/[^\s]+\/login\/device)/)?.[1],
+      url: lastMatch(out, /Press Enter to open (https:\/\/\S+) in your browser/)?.[1],
     }),
     autoAnswers: [{ match: /Press Enter to open/i, send: "\r" }],
     verify,
   }
 }
 
-/** `glab auth login --device …`: user code + verification URL on the GitLab instance. */
+/** `glab auth login --device …`: 8-character code (no dash on gitlab.com) + device URL, no prompt. */
 export function glabParser(verify: FlowParser["verify"]): FlowParser {
   return {
     parse: (out) => ({
-      code:
-        lastMatch(out, /(?:user code|code)[^A-Z0-9]{0,20}([A-Z0-9]{4,}-?[A-Z0-9]{4,})/i)?.[1] ??
-        undefined,
-      url: lastMatch(out, /(https:\/\/[^\s]+\/oauth\/device[^\s]*)/)?.[1],
+      code: lastMatch(out, /one-time code:\s*([A-Z0-9-]{6,})/)?.[1],
+      url: lastMatch(out, /open this URL on any device to authorize:\s*(https:\/\/\S+)/)?.[1],
     }),
-    autoAnswers: [{ match: /Press Enter/i, send: "\r" }],
     verify,
   }
 }
@@ -40,10 +37,7 @@ export function glabParser(verify: FlowParser["verify"]): FlowParser {
 export function claudeParser(verify: FlowParser["verify"]): FlowParser {
   return {
     parse: (out) => {
-      const url = lastMatch(
-        out,
-        /(https:\/\/(?:claude\.ai|claude\.com|console\.anthropic\.com)\/[^\s]*oauth[^\s]*)/,
-      )?.[1]
+      const url = lastMatch(out, /If the browser didn't open, visit:\s*\n?(https:\/\/\S+)/)?.[1]
       return { url, needsPaste: Boolean(url) }
     },
     verify,

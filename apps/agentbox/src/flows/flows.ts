@@ -4,10 +4,24 @@ import { log } from "../log"
 
 const ESC = String.fromCharCode(27)
 const BEL = String.fromCharCode(7)
+// CSI, OSC (incl. OSC 8 hyperlinks), DCS/APC/PM/SOS strings, two-byte escapes, and CR.
 const ANSI = new RegExp(
-  `${ESC}\\[[0-9;?]*[ -/]*[@-~]|${ESC}\\][^${BEL}]*(${BEL}|${ESC}\\\\)|${ESC}[()][0-9A-B]|\r`,
+  [
+    `${ESC}\\[[0-?]*[ -/]*[@-~]`,
+    `${ESC}\\][^${BEL}${ESC}]*(?:${BEL}|${ESC}\\\\)`,
+    `${ESC}[PX^_][^${ESC}]*${ESC}\\\\`,
+    `${ESC}[@-Z\\\\-_]`,
+    "\r",
+  ].join("|"),
   "g",
 )
+
+/** Replies to terminal queries: cursor position (DSR), background colour (OSC 11), device attributes. */
+const TERMINAL_ANSWERS: [string, string][] = [
+  [`${ESC}[6n`, `${ESC}[1;1R`],
+  [`${ESC}]11;?`, `${ESC}]11;rgb:0000/0000/0000${ESC}\\`],
+  [`${ESC}[c`, `${ESC}[?62;22c`],
+]
 
 /** Strips ANSI escape sequences and carriage returns from PTY output. */
 export function stripAnsi(s: string) {
@@ -72,8 +86,12 @@ export class FlowRegistry {
       terminal: {
         cols: 200,
         rows: 50,
-        data: (_term, data) => {
-          entry.output += stripAnsi(decoder.decode(data, { stream: true }))
+        data: (term, data) => {
+          const raw = decoder.decode(data, { stream: true })
+          // gh/glab wait ~5 s for answers to terminal queries before printing anything.
+          for (const [query, answer] of TERMINAL_ANSWERS)
+            if (raw.includes(query)) term.write(answer)
+          entry.output += stripAnsi(raw)
           if (entry.output.length > 64_000) entry.output = entry.output.slice(-32_000)
           this.onOutput(entry, parser)
         },
@@ -153,6 +171,10 @@ export class FlowRegistry {
     if (!entry) return { ok: false }
     entry.flow.state = "cancelled"
     entry.proc?.kill("SIGTERM")
+    // glab ignores SIGTERM/SIGINT while it waits for authorization.
+    setTimeout(() => {
+      if (entry.proc && entry.proc.exitCode === null) entry.proc.kill("SIGKILL")
+    }, 2000)
     return { ok: true }
   }
 

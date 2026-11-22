@@ -39,6 +39,9 @@ function forwardHeaders(headers: Headers) {
   headers.forEach((v, k) => {
     if (!HOP_BY_HOP.has(k.toLowerCase())) out.set(k, v)
   })
+  // Already checked against this proxy's own origin; the box sees a different Host.
+  out.delete("origin")
+  out.delete("referer")
   return out
 }
 
@@ -115,6 +118,11 @@ export async function connect(opts: {
       const host = (req.headers.get("host") ?? "").replace(/:\d+$/, "")
       if (!["localhost", "127.0.0.1", "[::1]"].includes(host) && !host.endsWith(".localhost"))
         return new Response("Forbidden host", { status: 403 })
+      // Over iroh the device id is the credential, so other websites open in this browser must
+      // not be able to use the proxy (CSRF): only pages served from this proxy may call it.
+      const origin = req.headers.get("origin")
+      if (origin && origin !== `http://${req.headers.get("host")}`)
+        return new Response("Cross-origin request refused", { status: 403 })
       if (req.headers.get("upgrade")?.toLowerCase() === "websocket") {
         const protocols = (req.headers.get("sec-websocket-protocol") ?? "")
           .split(",")

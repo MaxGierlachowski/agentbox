@@ -29,7 +29,8 @@
     "picocolors": "^1",
     "pino": "^9",
     "yaml": "2",
-    "zod": "^4.6.0"
+    "zod": "^4.6.0",
+    "@workspace/providers": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

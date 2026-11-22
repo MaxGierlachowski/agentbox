@@ -1,0 +1,34 @@
+[Unit]
+Description=agentbox: Paseo agent daemon (127.0.0.1:6767)
+After=network-online.target
+Wants=network-online.target
+PartOf=agentbox.target
+
+[Service]
+Type=simple
+User=agentbox
+Group=agentbox
+WorkingDirectory=/home/agentbox
+Environment=HOME=/home/agentbox
+Environment=PASEO_HOME=/home/agentbox/.paseo
+Environment=PASEO_LISTEN=127.0.0.1:6767
+Environment=PASEO_RELAY_ENABLED=false
+Environment=PASEO_WEB_UI_ENABLED=false
+# Agents inherit this: pinned CLIs only, no self-updates; browser via the shared Chrome.
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=DISABLE_AUTOUPDATER=1
+Environment=BU_CDP_URL=http://127.0.0.1:9333
+Environment=BROWSER=/usr/local/lib/agentbox/open-url
+ExecStart=/usr/local/bin/paseo daemon run --home /home/agentbox/.paseo
+ExecReload=/usr/local/bin/paseo daemon reload --home /home/agentbox/.paseo
+Restart=always
+RestartSec=3
+# Only the daemon is stopped on restart; agent processes keep running where Paseo re-attaches.
+KillMode=process
+TimeoutStopSec=30
+NoNewPrivileges=yes
+ProtectSystem=full
+UMask=0077
+
+[Install]
+WantedBy=agentbox.target

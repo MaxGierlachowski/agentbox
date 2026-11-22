@@ -1,0 +1,22 @@
+[Unit]
+Description=agentbox: browser display :1 (KasmVNC web client on 127.0.0.1:6901)
+After=network.target
+Upholds=agentbox-chrome.service
+PartOf=agentbox.target
+
+[Service]
+Type=simple
+User=agentbox
+Group=agentbox
+WorkingDirectory=/home/agentbox
+Environment=HOME=/home/agentbox USER=agentbox
+# A crashed Xvnc leaves its lock and socket behind and the wrapper then refuses display :1.
+ExecStartPre=/bin/rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
+ExecStart=/usr/bin/kasmvncserver :1 -fg -websocketPort 6901 -interface 127.0.0.1 -DisableBasicAuth
+Restart=always
+RestartSec=2
+KillMode=control-group
+TimeoutStopSec=15
+
+[Install]
+WantedBy=agentbox.target

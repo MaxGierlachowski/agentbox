@@ -1,0 +1,32 @@
+[Unit]
+Description=agentbox: Hermes agent gateway (all profiles)
+Documentation=https://github.com/NousResearch/hermes-agent
+After=network-online.target agentbox-paseo.service
+Wants=network-online.target
+PartOf=agentbox.target
+
+[Service]
+Type=simple
+User=agentbox
+Group=agentbox
+WorkingDirectory=/home/agentbox
+Environment=HOME=/home/agentbox
+Environment=HERMES_HOME=/home/agentbox/.hermes
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=DISABLE_AUTOUPDATER=1
+# OAuth consent pages (MCP logins) open in the box's shared Chrome.
+Environment=BROWSER=/usr/local/lib/agentbox/open-url
+Environment=BU_CDP_URL=http://127.0.0.1:9333
+ExecStart=/usr/local/bin/hermes gateway run --replace --external-supervisor
+Restart=always
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=90
+NoNewPrivileges=yes
+ProtectSystem=full
+UMask=0077
+
+[Install]
+WantedBy=agentbox.target

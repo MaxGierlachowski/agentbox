@@ -1,0 +1,10 @@
+[Unit]
+Description=agentbox: reload the iroh gateway when the device allow list changes
+PartOf=agentbox.target
+
+[Path]
+PathChanged=/var/lib/agentbox/iroh-access/access.env
+Unit=agentbox-iroh-reload.service
+
+[Install]
+WantedBy=agentbox.target

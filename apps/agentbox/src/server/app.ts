@@ -215,6 +215,8 @@ export function createApp({ config, auth, router, devices, proxySecret, webRoot 
     const via = c.get("via")
     const irohId = c.req.header("x-iroh-remote-id")
     if (via !== "iroh" || !irohId) return c.json({ error: "Pairing works only over iroh" }, 400)
+    // Ends up in the gateway's allow list; a malformed id would make the reload fail silently.
+    if (!/^[0-9a-f]{64}$/.test(irohId)) return c.json({ error: "Malformed endpoint id" }, 400)
     if (!limiter.attempt(`pair:${irohId}`)) return c.json({ error: "Too many attempts" }, 429)
     const parsed = Redeem.safeParse(await c.req.json().catch(() => null))
     if (!parsed.success) return c.json({ error: "code required" }, 400)

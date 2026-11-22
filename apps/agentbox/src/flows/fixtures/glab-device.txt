@@ -1,0 +1,7 @@
+]11;?\[6n]11;?\[6n- Signing into gitlab.com
+
+First copy your one-time code: XXXXXXXX
+Then open this URL on any device to authorize: https://gitlab.com/oauth/device
+
+Waiting for authorization...
+]11;?[c

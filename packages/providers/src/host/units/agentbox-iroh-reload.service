@@ -1,0 +1,6 @@
+[Unit]
+Description=agentbox: reload the iroh gateway allow list
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl reload --no-block agentbox-iroh.service

@@ -85,7 +85,20 @@ export class CliService {
             "-h",
             host,
           ]
-        : ["glab", "auth", "login", "--device", "--hostname", host, "--git-protocol", "ssh"]
+        : [
+            "glab",
+            "auth",
+            "login",
+            "--device",
+            "--hostname",
+            host,
+            "--git-protocol",
+            "ssh",
+            // Without these glab stops at a TUI question; there is no keyring on a headless box.
+            "--container-registry-domains",
+            `${host},${host}:443,registry.${host}`,
+            "--insecure-storage",
+          ]
     const flow = this.deps.flows.start(argv, cli === "gh" ? ghParser(verify) : glabParser(verify), {
       env: this.env(),
     })

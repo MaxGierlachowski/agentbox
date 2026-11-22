@@ -4,11 +4,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./browser": "./src/workspace/browser/index.ts",
-    "./cloudcli": "./src/workspace/cloudcli/index.ts",
-    "./metamcp": "./src/workspace/metamcp/index.ts",
-    "./plane": "./src/workspace/plane/index.ts",
-    "./shared": "./src/workspace/shared/http.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

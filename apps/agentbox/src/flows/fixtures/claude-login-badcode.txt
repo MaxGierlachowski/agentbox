@@ -1,0 +1,7 @@
+Opening browser to sign in…
+If the browser didn't open, visit:
+]8;;https://claude.ai/oauth/authorize?XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX[94mhttps://claude.ai/oauth/authorize?XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX[39m]8;;
+Paste code here if prompted > not-a-real-code#not-a-real-state
+Signing in…
+Couldn't log in: That code wasn't accepted. It may be incomplete, expired, already used, or from an earlier sign-in attempt. Sign in again to get a new code.
+[?25h
