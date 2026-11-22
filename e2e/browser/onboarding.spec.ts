@@ -12,6 +12,7 @@ mkdirSync(SHOTS, { recursive: true })
 async function shot(page: Page, name: string) {
   const project = test.info().project.name
   // Let toasts and transitions settle so screenshots are comparable.
+  await page.evaluate("window.scrollTo(0, 0)")
   await page.waitForTimeout(250)
   await page.screenshot({ path: join(SHOTS, `${project}-${name}.png`), fullPage: true })
 }
@@ -77,6 +78,13 @@ test("claim, every onboarding step, hand-off to Hermes UI", async ({ page }) => 
   await expect(heading(page, "Who are you?")).toBeVisible()
   await page.goto("/onboarding/")
   await expect(heading(page, "Who are you?")).toBeVisible()
+  // Role cards are real toggle buttons: keyboard works.
+  const manager = page.getByRole("button", { name: /Manager/ })
+  await manager.focus()
+  await page.keyboard.press("Space")
+  await expect(manager).toHaveAttribute("aria-pressed", "true")
+  await page.keyboard.press("Enter")
+  await expect(manager).toHaveAttribute("aria-pressed", "false")
   await page.getByRole("button", { name: /Developer/ }).click()
   await expect(page.getByRole("button", { name: /Developer/ })).toHaveAttribute(
     "aria-pressed",
@@ -169,7 +177,7 @@ test("claim, every onboarding step, hand-off to Hermes UI", async ({ page }) => 
   ).toBeVisible()
   await page.getByLabel("Take control").click()
   await expect(page.getByText("You have control.")).toBeVisible()
-  await expect(page.getByText("github.com")).toBeVisible()
+  await expect(page.getByText("github.com", { exact: true })).toBeVisible()
   await shot(page, "09-browser")
   await page.getByRole("button", { name: "Skip this step" }).click()
 

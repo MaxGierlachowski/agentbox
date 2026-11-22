@@ -15,7 +15,7 @@ import { Label } from "@workspace/ui/components/label"
 import { Switch } from "@workspace/ui/components/switch"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { cn } from "@workspace/ui/lib/utils"
-import { CheckIcon, ChevronDownIcon, ClockIcon, Trash2Icon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, ClockIcon, PlugIcon, Trash2Icon } from "lucide-react"
 import { errorMessage } from "@/lib/errors"
 import { client, orpc } from "@/lib/orpc"
 
@@ -105,9 +105,16 @@ export function AgentDraftCard({
 
       {draft.skills.length + draft.mcps.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
-          {[...draft.skills, ...draft.mcps].map((t) => (
+          {draft.skills.map((t) => (
             <Badge key={t} variant="secondary" className="font-normal">
               {short(t)}
+            </Badge>
+          ))}
+          {draft.mcps.map((t) => (
+            <Badge key={t} variant="outline" className="gap-1 font-normal">
+              <PlugIcon className="size-3" aria-hidden />
+              {short(t)}
+              <span className="sr-only">(MCP server)</span>
             </Badge>
           ))}
         </div>

@@ -43,7 +43,7 @@ export function StepLayout({
     <section aria-labelledby="step-title" className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl space-y-1.5">
-          <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+          <p className="hidden font-medium text-muted-foreground text-xs uppercase tracking-wider lg:block">
             Step {index + 1} of {STEPS.length}
           </p>
           <h1 id="step-title" className="font-semibold text-2xl tracking-tight">

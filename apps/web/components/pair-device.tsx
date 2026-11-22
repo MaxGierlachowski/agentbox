@@ -89,7 +89,7 @@ export function PairPanel({ initialKind = "phone" }: { initialKind?: Kind }) {
   }
 
   return (
-    <Tabs value={kind} onValueChange={(v) => setKind(v as Kind)} className="gap-4">
+    <Tabs value={kind} onValueChange={(v) => setKind(v as Kind)} className="min-w-0 gap-4">
       <TabsList className="w-full">
         <TabsTrigger value="phone">
           <SmartphoneIcon />
@@ -161,7 +161,7 @@ export function PairDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[calc(100svh-2rem)] grid-cols-[minmax(0,1fr)] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Pair a device</DialogTitle>
           <DialogDescription>

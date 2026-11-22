@@ -29,6 +29,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { CopyField } from "@workspace/ui/composites/copy-field"
 import { StatusBadge } from "@workspace/ui/composites/status-badge"
 import {
+  CheckIcon,
   CircleCheckIcon,
   CircleXIcon,
   ExternalLinkIcon,
@@ -638,6 +639,7 @@ export function HermesModelCard() {
 
         <div className="flex flex-wrap items-center gap-2">
           <Button
+            variant={inUse ? "secondary" : "default"}
             disabled={!canApply || apply.isPending}
             onClick={() =>
               prov &&
@@ -649,7 +651,7 @@ export function HermesModelCard() {
               })
             }
           >
-            {apply.isPending ? <Spinner /> : null}
+            {apply.isPending ? <Spinner /> : inUse ? <CheckIcon /> : null}
             {inUse ? "In use" : "Use this model"}
           </Button>
           <Button

@@ -45,7 +45,7 @@ export function AccountsStep() {
       description="Only what your toolkit needs. Each sign-in runs on the box; tokens stay there and are shared by the tools that need them."
     >
       {clis.length ? (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid items-start gap-4 xl:grid-cols-2">
           {clis.map((c) => (
             <CliLoginCard key={c} cli={c} />
           ))}
