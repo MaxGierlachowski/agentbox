@@ -26,12 +26,10 @@
     "pino": "^9",
     "zod": "^4.6.0",
     "drizzle-orm": "^0.45",
-    "@workspace/providers": "workspace:*",
-    "@workspace/automation": "workspace:*"
+    "@orpc/client": "^1.15.3",
+    "@orpc/contract": "^1.15.3"
   },
   "devDependencies": {
-    "@orpc/client": "^1.15.3",
-    "@orpc/contract": "^1.15.3",
     "@types/bun": "latest",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "^5.9"
