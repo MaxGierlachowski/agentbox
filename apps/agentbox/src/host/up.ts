@@ -689,8 +689,18 @@ async function configureHermes(ctx: Ctx, paseoMcp: Artifact, bridge: Artifact | 
       await mkdir(`${HERMES_HOME}/plugins`, { recursive: true })
       await execOk(["cp", "-r", artifactDir(bridge), dest])
       await execOk(["chown", "-R", "agentbox:agentbox", `${HERMES_HOME}/plugins`])
-      await hermes(["plugins", "enable", "hermes-paseo-bridge"])
       ctx.state["bridge"] = bridge.sha256
+      changed = true
+    }
+    // Checked on every run: enabling installs the plugin's Python deps and can fail.
+    const enabled = async () =>
+      /^enabled\s+\S+\s+\S+\s+hermes-paseo-bridge\s*$/m.test(
+        (await hermes(["plugins", "list", "--plain", "--no-bundled"])).stdout,
+      )
+    if (!(await enabled())) {
+      const r = await hermes(["plugins", "enable", "hermes-paseo-bridge"])
+      if (!(await enabled()))
+        throw new Error(`could not enable hermes-paseo-bridge: ${(r.stderr || r.stdout).trim().split("\n").slice(-4).join(" ")}`)
       changed = true
     }
     const settings = {
