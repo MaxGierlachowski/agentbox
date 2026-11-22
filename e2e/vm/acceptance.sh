@@ -53,7 +53,7 @@ st_health() {
   # Only sshd and the LAN listener may face the network (TCP and UDP).
   # UDP: iroh-gateway's QUIC sockets are expected (authenticated, allow-listed); Xvnc's UDP :6901
   # is dropped by agentbox-firewall. Everything else must be loopback.
-  exposed="$(remote "sudo ss -tulnpH" | grep -v 'iroh-gateway' | awk '{print $1, $5}' \
+  exposed="$(remote "sudo ss -tulnpH" | grep -v 'iroh-gateway' | awk '{print $1, $5}' | sed -E 's/%[^:]+:/:/' \
     | grep -vE ' (127\.0\.0\.[0-9]+|\[::1\]|\[::ffff:127\.0\.0\.1\]):|^tcp .*:(22|8443)$|^udp .*:6901$' || true)"
   [ -z "$exposed" ] || fail "unexpected listeners: $exposed"
   remote "sudo iptables -C INPUT ! -i lo -p udp --dport 6901 -j DROP" || fail "KasmVNC UDP not firewalled"

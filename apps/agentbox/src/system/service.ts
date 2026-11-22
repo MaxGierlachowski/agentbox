@@ -130,6 +130,8 @@ export class SystemService {
       .split("\n")
       .map((l) => l.trim().split(/\s+/)[3])
       .filter((addr): addr is string => Boolean(addr))
+      // systemd-resolved shows up as 127.0.0.53%lo:53: drop the zone suffix first.
+      .map((addr) => addr.replace(/%[^:\]]+/, ""))
       .filter((addr) => !/^(127\.0\.0\.\d+|\[::1\]|\[::ffff:127\.0\.0\.1\]):/.test(addr))
       .filter((addr) => !(this.config.listen === "lan" && addr.endsWith(":8443")))
       .filter((addr) => !addr.endsWith(":22"))
