@@ -20,8 +20,8 @@ export const Role = z.enum([
 export type Role = z.infer<typeof Role>
 
 /** Kinds a search result can have. Curated items are skill | mcp | cli; bundles are separate. */
-export const CatalogKind = z.enum(["skill", "mcp", "cli", "bundle"])
-export type CatalogKind = z.infer<typeof CatalogKind>
+export const CatalogEntryKind = z.enum(["skill", "mcp", "cli", "bundle"])
+export type CatalogEntryKind = z.infer<typeof CatalogEntryKind>
 
 export const CatalogItemKind = z.enum(["skill", "mcp", "cli"])
 export type CatalogItemKind = z.infer<typeof CatalogItemKind>
