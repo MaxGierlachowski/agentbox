@@ -5,10 +5,16 @@ import { z } from "zod"
 /**
  * Procedures the main session announced for v1 but that are not in packages/contract yet:
  * `toolkit.apply` takes `env` values, `toolkit.connect` signs an OAuth MCP in through the box's
- * browser. Delete this file and use `contract` once they land there.
+ * browser, `ai.hermesLoginStart` signs Hermes' own Anthropic OAuth in (finished with
+ * `ai.accountLoginFinish`). Delete this file and use `contract` once they land there.
  */
 export const contractNext = {
   ...contract,
+  ai: {
+    ...contract.ai,
+    /** Hermes' own Claude subscription login (separate from the Paseo accounts). */
+    hermesLoginStart: oc.input(z.object({ model: z.string().optional() })).output(LoginFlow),
+  },
   toolkit: {
     ...contract.toolkit,
     apply: oc

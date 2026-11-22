@@ -35,9 +35,9 @@ export default function OverviewPage() {
         />
         <div className="relative space-y-4">
           <div className="space-y-1">
-            <p className="text-muted-foreground text-sm">
-              {info.data ? info.data.hostname : <Skeleton className="inline-block h-4 w-24" />}
-            </p>
+            <div className="h-5 text-muted-foreground text-sm">
+              {info.data ? info.data.hostname : <Skeleton className="h-4 w-24" />}
+            </div>
             <h1 className="font-semibold text-2xl tracking-tight sm:text-3xl">
               {me.data?.name
                 ? `Hi ${me.data.name.split(" ")[0]}, your box is ready.`

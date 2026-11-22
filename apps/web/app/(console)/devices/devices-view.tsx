@@ -28,7 +28,7 @@ import { toast } from "@workspace/ui/components/sonner"
 import { PageHeader } from "@workspace/ui/composites/page-header"
 import { formatDistanceToNow } from "date-fns"
 import { LaptopIcon, MonitorSmartphoneIcon, PlusIcon, SmartphoneIcon } from "lucide-react"
-import { parseAsBoolean, useQueryState } from "nuqs"
+import { parseAsString, useQueryState } from "nuqs"
 import { PairDialog } from "@/components/pair-device"
 import { errorMessage } from "@/lib/errors"
 import { orpc } from "@/lib/orpc"
@@ -37,7 +37,9 @@ const icons = { phone: SmartphoneIcon, laptop: LaptopIcon, other: MonitorSmartph
 
 export function DevicesView() {
   // Hermes UI links here with ?pair=1 (HERMES_UI_PAIRING_URL).
-  const [pair, setPair] = useQueryState("pair", parseAsBoolean.withDefault(false))
+  const [pairParam, setPairParam] = useQueryState("pair", parseAsString)
+  const pair = pairParam === "1" || pairParam === "true"
+  const setPair = (open: boolean) => setPairParam(open ? "1" : null)
   const devices = useQuery(orpc.devices.list.queryOptions())
 
   return (
@@ -81,7 +83,7 @@ export function DevicesView() {
           </EmptyContent>
         </Empty>
       )}
-      <PairDialog open={pair} onOpenChange={(o) => void setPair(o ? true : null)} />
+      <PairDialog open={pair} onOpenChange={(o) => void setPair(o)} />
     </>
   )
 }

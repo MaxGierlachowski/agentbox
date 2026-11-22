@@ -172,17 +172,79 @@ function AddClaudeAccount({
   onDone: () => void
 }) {
   const [label, setLabel] = useState(suggestedLabel)
-  const [started, setStarted] = useState<LoginFlow | null>(null)
+  const start = useMutation(orpc.ai.accountLoginStart.mutationOptions())
+
+  if (start.data) {
+    return (
+      <PasteLogin
+        started={start.data}
+        idPrefix="claude"
+        intro={<>Open the Claude sign-in page and log in with the account for “{label}”.</>}
+        onDone={onDone}
+        onCancel={onDone}
+      />
+    )
+  }
+
+  return (
+    <form
+      className="flex flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-3"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault()
+        if (label.trim()) start.mutate({ label: label.trim() })
+      }}
+    >
+      <Field className="min-w-48 flex-1">
+        <FieldLabel htmlFor="claude-label">Name for this account</FieldLabel>
+        <Input
+          id="claude-label"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          maxLength={40}
+        />
+      </Field>
+      <Button type="submit" disabled={!label.trim() || start.isPending}>
+        {start.isPending ? <Spinner /> : null}
+        Start sign-in
+      </Button>
+      <Button type="button" variant="ghost" onClick={onDone}>
+        Cancel
+      </Button>
+      {start.isError ? (
+        <p className="basis-full text-destructive text-sm" role="alert">
+          {errorMessage(start.error)}
+        </p>
+      ) : null}
+    </form>
+  )
+}
+
+/**
+ * Claude's paste-code login (`claude auth login`, Hermes' Anthropic OAuth): open the page, sign
+ * in, paste the code it shows back here; then poll the flow until the CLI confirms.
+ */
+function PasteLogin({
+  started,
+  idPrefix,
+  intro,
+  onDone,
+  onCancel,
+}: {
+  started: LoginFlow
+  idPrefix: string
+  intro: React.ReactNode
+  onDone: (flow: LoginFlow) => void
+  onCancel: () => void
+}) {
   const [code, setCode] = useState("")
-  const flow = useLoginFlow(started?.flowId ?? null, started)
-  const start = useMutation(orpc.ai.accountLoginStart.mutationOptions({ onSuccess: setStarted }))
+  const flow = useLoginFlow(started.flowId, started)
   const finish = useMutation(
     orpc.ai.accountLoginFinish.mutationOptions({ onSuccess: () => void flow.refetch() }),
   )
-  const cancel = useMutation(orpc.flows.cancel.mutationOptions({ onSettled: onDone }))
+  const cancel = useMutation(orpc.flows.cancel.mutationOptions({ onSettled: onCancel }))
   const f = flow.data ?? started
 
-  if (f?.state === "done") {
+  if (f.state === "done") {
     return (
       <div
         className="flex items-center gap-2 rounded-lg border border-emerald-600/30 bg-emerald-50/50 p-3 text-sm dark:bg-emerald-950/20"
@@ -190,55 +252,21 @@ function AddClaudeAccount({
       >
         <CircleCheckIcon className="size-4 text-emerald-600" aria-hidden />
         <span className="flex-1">Signed in{f.user ? ` as ${f.user}` : ""}.</span>
-        <Button size="sm" onClick={onDone}>
+        <Button size="sm" onClick={() => onDone(f)}>
           Done
         </Button>
       </div>
     )
   }
 
-  if (!f) {
-    return (
-      <form
-        className="flex flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-3"
-        onSubmit={(e: FormEvent) => {
-          e.preventDefault()
-          if (label.trim()) start.mutate({ label: label.trim() })
-        }}
-      >
-        <Field className="min-w-48 flex-1">
-          <FieldLabel htmlFor="claude-label">Name for this account</FieldLabel>
-          <Input
-            id="claude-label"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            maxLength={40}
-          />
-        </Field>
-        <Button type="submit" disabled={!label.trim() || start.isPending}>
-          {start.isPending ? <Spinner /> : null}
-          Start sign-in
-        </Button>
-        <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
-        </Button>
-        {start.isError ? (
-          <p className="basis-full text-destructive text-sm" role="alert">
-            {errorMessage(start.error)}
-          </p>
-        ) : null}
-      </form>
-    )
-  }
-
   const verifying = f.state === "starting" || finish.isPending
+  const codeId = `${idPrefix}-code`
   return (
     <div className="space-y-4 rounded-lg border bg-muted/30 p-3 sm:p-4">
       <ol className="space-y-4 text-sm">
         <li className="space-y-2">
           <p>
-            <span className="font-medium">1.</span> Open the Claude sign-in page and log in with the
-            account for “{label}”.
+            <span className="font-medium">1.</span> {intro}
           </p>
           {f.url ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -264,12 +292,12 @@ function AddClaudeAccount({
               if (code.trim().length >= 4) finish.mutate({ flowId: f.flowId, code: code.trim() })
             }}
           >
-            <label htmlFor="claude-code" className="block">
+            <label htmlFor={codeId} className="block">
               <span className="font-medium">2.</span> Paste the code Claude shows you:
             </label>
             <div className="flex flex-wrap gap-2">
               <Input
-                id="claude-code"
+                id={codeId}
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 autoComplete="off"
@@ -456,38 +484,32 @@ function ApiKeyRow({
 export function HermesModelCard() {
   const status = useAiStatus()
   const queryClient = useQueryClient()
+  const invalidate = useInvalidateAi()
   const data = status.data
-  const readyAccounts = data?.accounts.filter((a) => a.status === "ready") ?? []
+  const hermes = data?.hermes
   const keyProviders = data?.apiKeys.filter((k) => k.set).map((k) => k.provider) ?? []
+  const claudeReady = hermes?.source === "claude-account" && hermes.ready
 
-  const [source, setSource] = useState<"claude-account" | "api-key" | null>(null)
-  const [account, setAccount] = useState<string | null>(null)
+  const [wayChoice, setWay] = useState<"claude" | "api-key" | null>(null)
   const [provider, setProvider] = useState<string | null>(null)
   const [model, setModel] = useState<string | null>(null)
-
-  // Defaults follow what is configured; the user's picks win once made.
-  const src =
-    source ??
-    (data?.hermes.source === "api-key" || (readyAccounts.length === 0 && keyProviders.length > 0)
+  const way =
+    wayChoice ??
+    (hermes?.source === "api-key" || (!claudeReady && keyProviders.length > 0)
       ? "api-key"
-      : "claude-account")
-  const acct =
-    account ?? readyAccounts.find((a) => a.isDefault)?.slug ?? readyAccounts[0]?.slug ?? null
+      : "claude")
   const prov =
-    src === "claude-account"
+    way === "claude"
       ? "anthropic"
       : (provider ??
-        (data?.hermes.source === "api-key" ? data.hermes.provider : null) ??
+        (hermes?.source === "api-key" ? hermes.provider : null) ??
         keyProviders[0] ??
         null)
   const models = (prov && data?.models[prov]) || []
-  const mdl =
-    model && models.includes(model)
-      ? model
-      : data?.hermes.model && models.includes(data.hermes.model)
-        ? data.hermes.model
-        : (models[0] ?? null)
+  const current = hermes?.model && models.includes(hermes.model) ? hermes.model : null
+  const mdl = model && models.includes(model) ? model : (current ?? models[0] ?? null)
 
+  const login = useMutation(orpc.ai.hermesLoginStart.mutationOptions())
   const apply = useMutation(
     orpc.ai.setHermesModel.mutationOptions({
       onSuccess: (s) => {
@@ -497,10 +519,15 @@ export function HermesModelCard() {
     }),
   )
   const probe = useMutation(orpc.ai.probe.mutationOptions())
+  const inUse =
+    hermes?.ready &&
+    hermes.model === mdl &&
+    (way === "claude" ? hermes.source === "claude-account" : hermes.provider === prov)
   const canApply =
     !!prov &&
     !!mdl &&
-    (src === "claude-account" ? !!acct : keyProviders.includes(prov as ApiKeyProvider))
+    !inUse &&
+    (way === "claude" ? claudeReady : keyProviders.includes(prov as ApiKeyProvider))
 
   return (
     <Card>
@@ -510,7 +537,7 @@ export function HermesModelCard() {
           The model your assistant thinks with. This is the one thing Hermes needs.
         </CardDescription>
         <CardAction>
-          {data?.hermes.ready ? (
+          {hermes?.ready ? (
             <StatusBadge status="ok" label="Ready" />
           ) : data ? (
             <StatusBadge status="warn" label="Not set" />
@@ -519,17 +546,15 @@ export function HermesModelCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <RadioGroup
-          value={src}
-          onValueChange={(v) => setSource(v as typeof src)}
+          value={way}
+          onValueChange={(v) => setWay(v as typeof way)}
           className="grid gap-2 sm:grid-cols-2"
-          aria-label="Where Hermes gets its model from"
+          aria-label="How Hermes gets its model"
         >
           <SourceOption
-            value="claude-account"
-            title="Claude account"
-            hint={
-              readyAccounts.length ? `${readyAccounts.length} signed in` : "Sign in above first"
-            }
+            value="claude"
+            title="Claude subscription"
+            hint={claudeReady ? "Hermes is signed in" : "One more sign-in, same account"}
           />
           <SourceOption
             value="api-key"
@@ -537,28 +562,43 @@ export function HermesModelCard() {
             hint={keyProviders.length ? keyProviders.join(", ") : "Add a key above first"}
           />
         </RadioGroup>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {src === "claude-account" ? (
-            <Field>
-              <FieldLabel htmlFor="hermes-account">Account</FieldLabel>
-              <Select
-                value={acct ?? ""}
-                onValueChange={setAccount}
-                disabled={!readyAccounts.length}
-              >
-                <SelectTrigger id="hermes-account" className="w-full">
-                  <SelectValue placeholder="No signed-in account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {readyAccounts.map((a) => (
-                    <SelectItem key={a.slug} value={a.slug}>
-                      {a.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+
+        {way === "claude" && !claudeReady ? (
+          login.data ? (
+            <PasteLogin
+              started={login.data}
+              idPrefix="hermes"
+              intro="Open the Claude sign-in page and log in. This login is only for Hermes."
+              onDone={() => {
+                login.reset()
+                void invalidate()
+              }}
+              onCancel={() => login.reset()}
+            />
           ) : (
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-3">
+              <p className="min-w-56 flex-1 text-sm">
+                Hermes signs in separately from your coding agents — it's the same Claude account,
+                one more click.
+              </p>
+              <Button
+                onClick={() => login.mutate({ model: mdl ?? undefined })}
+                disabled={login.isPending}
+              >
+                {login.isPending ? <Spinner /> : null}
+                Sign in for Hermes
+              </Button>
+              {login.isError ? (
+                <p className="basis-full text-destructive text-sm" role="alert">
+                  {errorMessage(login.error)}
+                </p>
+              ) : null}
+            </div>
+          )
+        ) : null}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {way === "api-key" ? (
             <Field>
               <FieldLabel htmlFor="hermes-provider">Provider</FieldLabel>
               <Select
@@ -578,7 +618,7 @@ export function HermesModelCard() {
                 </SelectContent>
               </Select>
             </Field>
-          )}
+          ) : null}
           <Field>
             <FieldLabel htmlFor="hermes-model">Model</FieldLabel>
             <Select value={mdl ?? ""} onValueChange={setModel} disabled={!models.length}>
@@ -595,6 +635,7 @@ export function HermesModelCard() {
             </Select>
           </Field>
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <Button
             disabled={!canApply || apply.isPending}
@@ -602,28 +643,27 @@ export function HermesModelCard() {
               prov &&
               mdl &&
               apply.mutate({
-                source: src,
+                source: way === "claude" ? "claude-account" : "api-key",
                 provider: prov,
                 model: mdl,
-                account: src === "claude-account" ? (acct ?? undefined) : undefined,
               })
             }
           >
             {apply.isPending ? <Spinner /> : null}
-            Use this model
+            {inUse ? "In use" : "Use this model"}
           </Button>
           <Button
             variant="outline"
-            disabled={!data?.hermes.ready || probe.isPending}
+            disabled={!hermes?.ready || probe.isPending}
             onClick={() => probe.mutate({})}
           >
             {probe.isPending ? <Spinner /> : <ZapIcon />}
             Test Hermes
           </Button>
-          {data?.hermes.ready ? (
+          {hermes?.ready ? (
             <span className="text-muted-foreground text-xs">
-              Now: <span className="font-mono">{data.hermes.model}</span> via{" "}
-              {data.hermes.source === "claude-account" ? "Claude account" : data.hermes.provider}
+              Now: <span className="font-mono">{hermes.model}</span> via{" "}
+              {hermes.source === "claude-account" ? "Claude subscription" : hermes.provider}
             </span>
           ) : null}
         </div>

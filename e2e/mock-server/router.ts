@@ -141,12 +141,24 @@ export function createRouter(getState: () => MockState) {
     if (!entry) throw new ORPCError("NOT_FOUND", { message: "Unknown flow" })
     const f = entry.flow
     if (f.state !== "waiting" && f.state !== "starting") return f
-    if (entry.kind === "claude" && !entry.pasted) return f
+    if ((entry.kind === "claude" || entry.kind === "hermes") && !entry.pasted) return f
     entry.pollsLeft -= 1
     if (entry.pollsLeft > 0) return f
     if (entry.kind === "oauth") {
       s().oauth.add(entry.item ?? "")
       Object.assign(f, { state: "done", user: s().owner?.email ?? "you", message: null })
+      return f
+    }
+    if (entry.kind === "hermes") {
+      s().hermesClaude = true
+      s().ai.hermes = {
+        source: "claude-account",
+        provider: "anthropic",
+        model: entry.model ?? "claude-sonnet-5",
+        ready: true,
+        message: null,
+      }
+      Object.assign(f, { state: "done", user: s().owner?.email ?? "you", message: "Signed in" })
       return f
     }
     if (entry.kind === "claude") {
@@ -394,6 +406,25 @@ export function createRouter(getState: () => MockState) {
         st.flows.set(flow.flowId, { flow, kind: "claude", pollsLeft: 2, pasted: false, slug })
         return flow
       }),
+      hermesLoginStart: a.ai.hermesLoginStart.handler(({ input }) => {
+        const flow: LoginFlow = {
+          flowId: rid("flow"),
+          url: "https://claude.ai/oauth/authorize?code=true&client_id=mock-hermes",
+          code: null,
+          needsPaste: true,
+          state: "waiting",
+          message: null,
+          user: null,
+        }
+        s().flows.set(flow.flowId, {
+          flow,
+          kind: "hermes",
+          pollsLeft: 2,
+          pasted: false,
+          model: input.model,
+        })
+        return flow
+      }),
       accountLoginFinish: a.ai.accountLoginFinish.handler(({ input }) => {
         const entry = s().flows.get(input.flowId)
         if (!entry) throw new ORPCError("NOT_FOUND", { message: "Unknown flow" })
@@ -437,9 +468,10 @@ export function createRouter(getState: () => MockState) {
       setHermesModel: a.ai.setHermesModel.handler(({ input }) => {
         const st = s()
         if (input.source === "claude-account") {
-          const acct = st.ai.accounts.find((x) => x.slug === input.account && x.status === "ready")
-          if (!acct)
-            throw new ORPCError("BAD_REQUEST", { message: "Pick a signed-in Claude account" })
+          if (!st.hermesClaude)
+            throw new ORPCError("BAD_REQUEST", {
+              message: "Sign Hermes in with your Claude subscription first",
+            })
         } else if (!st.ai.apiKeys.find((k) => k.provider === input.provider)?.set) {
           throw new ORPCError("BAD_REQUEST", { message: `Add a ${input.provider} API key first` })
         }

@@ -19,7 +19,7 @@ export type Preset = "fresh" | "claimed" | "onboarded"
 
 export interface FlowEntry {
   flow: LoginFlow
-  kind: "claude" | "gh" | "glab" | "oauth"
+  kind: "claude" | "hermes" | "gh" | "glab" | "oauth"
   /** Polls left until the flow completes on its own (gh/glab) or after the paste (claude). */
   pollsLeft: number
   pasted: boolean
@@ -27,6 +27,7 @@ export interface FlowEntry {
   slug?: string
   host?: string
   item?: string
+  model?: string
 }
 
 export interface RunEntry {
@@ -54,6 +55,8 @@ export interface MockState {
   runs: Map<string, RunEntry>
   installed: Selection
   soulUser: string
+  /** Hermes' own Claude subscription login finished (`ai.hermesLoginStart`). */
+  hermesClaude: boolean
   /** OAuth MCPs that finished `toolkit.connect`. */
   oauth: Set<string>
   /** Item id → env names supplied with `toolkit.apply` (values are dropped). */
@@ -174,6 +177,7 @@ export function createState(preset: Preset = "fresh"): MockState {
     runs: new Map(),
     installed: emptySelection(),
     soulUser: "",
+    hermesClaude: onboarded,
     oauth: new Set(),
     envSet: new Map(),
   }

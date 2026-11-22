@@ -61,11 +61,22 @@ function ClaimForm() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
-  // Drop the fragment from the address bar and history once it has been read.
+  // Drop the fragment from the address bar and history once it has been read. A link opened
+  // while this page is already showing only changes the hash, so listen for that too.
   useEffect(() => {
-    if (window.location.hash) {
-      window.history.replaceState(null, "", window.location.pathname + window.location.search)
+    const strip = () => {
+      if (window.location.hash) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search)
+      }
     }
+    const onHash = () => {
+      const code = otpFromHash()
+      if (code) setOtp(code)
+      strip()
+    }
+    strip()
+    window.addEventListener("hashchange", onHash)
+    return () => window.removeEventListener("hashchange", onHash)
   }, [])
 
   const strength = passwordStrength(password, [name, email])
