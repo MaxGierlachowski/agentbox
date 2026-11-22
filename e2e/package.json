@@ -5,14 +5,19 @@
   "private": true,
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "browser": "bun browser/run.ts"
+    "mock": "bun mock-server/index.ts",
+    "mock:watch": "bun --watch mock-server/index.ts",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1",
-    "@workspace/providers": "workspace:*",
-    "@workspace/contract": "workspace:*"
+    "@orpc/contract": "^1.15.3",
+    "@orpc/server": "^1.15.3",
+    "@workspace/contract": "workspace:*",
+    "zod": "^4.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/bun": "latest",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "^5.9"

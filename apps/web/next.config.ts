@@ -24,6 +24,9 @@ export default function config(phase: string): NextConfig {
       rewrites: async () => [
         { source: "/api/:path*", destination: `${API}/api/:path*` },
         { source: "/auth/:path*", destination: `${API}/auth/:path*` },
+        // Other apps on the same origin in production (Caddy); the mock server stands in.
+        { source: "/hermes/:path*", destination: `${API}/hermes/:path*` },
+        { source: "/browser/:path*", destination: `${API}/browser/:path*` },
       ],
     }
   }

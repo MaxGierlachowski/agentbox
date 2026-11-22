@@ -29,7 +29,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <NuqsAdapter>
           <TooltipProvider>
             {children}
-            <Toaster richColors closeButton />
+            <Toaster richColors closeButton position="top-center" />
           </TooltipProvider>
         </NuqsAdapter>
       </QueryClientProvider>
