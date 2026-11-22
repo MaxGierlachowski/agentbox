@@ -1,0 +1,111 @@
+# agentbox edge. Rendered by `agentbox up` to /etc/agentbox/Caddyfile. Do not edit.
+# Env (EnvironmentFile /etc/agentbox/env/caddy.env): AGENTBOX_PROXY_SECRET.
+#
+#   :8080  127.0.0.1    SSH tunnel and `agentbox connect` target          X-Agentbox-Via: local
+#   :8081  127.0.0.1    iroh ingress (only uid agentbox-edge may connect)  X-Agentbox-Via: iroh
+#   :8443  LAN, TLS     only in LAN mode, the one port facing the network  X-Agentbox-Via: lan
+{
+	admin unix//run/agentbox-caddy/admin.sock
+	storage file_system /var/lib/agentbox/caddy
+	auto_https off
+	servers {
+		trusted_proxies static 127.0.0.1/32
+		# No HTTP/3: it would open UDP :8443.
+		protocols h1 h2
+	}
+}
+
+# Headers only the edge may set; deleted before anything else runs.
+(strip) {
+	request_header -X-Agentbox-User
+	request_header -X-Agentbox-Proxy-Secret
+	request_header -X-Agentbox-Via
+}
+
+# Proves to agentbox and Hermes UI that the request came through Caddy, and how.
+(edge) {
+	request_header X-Agentbox-Proxy-Secret {env.AGENTBOX_PROXY_SECRET}
+	request_header X-Agentbox-Via {args[0]}
+}
+
+(apps) {
+	handle /healthz {
+		respond "ok" 200
+	}
+	# Phone pairing through the Hermes UI PWA lands in agentbox's device registry.
+	handle /hermes/api/pair/redeem {
+		rewrite * /api/devices/pair/redeem
+		reverse_proxy 127.0.0.1:7777
+	}
+	redir /hermes /hermes/ 308
+	redir /browser /browser/ 308
+	# KasmVNC builds its WebSocket URL from the "path" setting (default absolute "websockify").
+	@kasm_no_path {
+		path /browser/
+		not query path=*
+	}
+	redir @kasm_no_path /browser/?path=browser/websockify 302
+	# Hermes UI and the streamed browser: agentbox decides (session cookie or paired device).
+	@protected path /hermes/* /browser/*
+	forward_auth @protected 127.0.0.1:7777 {
+		uri /api/auth/check
+		copy_headers X-Agentbox-User
+	}
+	handle_path /browser/* {
+		reverse_proxy 127.0.0.1:6901
+	}
+	handle_path /hermes/* {
+		reverse_proxy 127.0.0.1:8787
+	}
+	# The config UI and API authenticate themselves (login, setup and pairing pages are public).
+	handle {
+		reverse_proxy 127.0.0.1:7777
+	}
+}
+
+# KasmVNC has no Origin check on its websocket: refuse cross-origin upgrades.
+(ws_same_origin) {
+	@ws_cross_origin expression `{http.request.header.Upgrade}.lowerAscii() == "websocket" && {http.request.header.Origin} != "http://" + {http.request.hostport} && {http.request.header.Origin} != "https://" + {http.request.hostport}`
+	respond @ws_cross_origin "cross-origin websocket refused" 403
+}
+
+http://:8080 {
+	bind 127.0.0.1
+	route {
+		import strip
+		request_header -X-Iroh-Remote-Id
+		import edge local
+		import ws_same_origin
+		import apps
+	}
+}
+
+http://:8081 {
+	bind 127.0.0.1
+	route {
+		# X-Iroh-Remote-Id comes from iroh-gateway (which drops client copies): keep it here only.
+		import strip
+		import edge iroh
+		# KasmVNC answers an upgrade without Origin with 404; iroh clients may send none.
+		@kasm_no_origin {
+			path /browser/*
+			header !Origin
+		}
+		request_header @kasm_no_origin Origin "http://127.0.0.1:6901"
+		import apps
+	}
+}
+
+# @LAN_BEGIN@
+https://:8443 {
+	bind 0.0.0.0
+	tls /etc/agentbox/tls/cert.pem /etc/agentbox/tls/key.pem
+	route {
+		import strip
+		request_header -X-Iroh-Remote-Id
+		import edge lan
+		import ws_same_origin
+		import apps
+	}
+}
+# @LAN_END@

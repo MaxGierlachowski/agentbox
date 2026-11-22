@@ -1,13 +1,7 @@
-import { ComingSoon } from "@/components/coming-soon"
+import { AgentsView } from "./agents-view"
 
-export const metadata = { title: "Agents & LLM" }
+export const metadata = { title: "Agents" }
 
-export default function Page() {
-  return (
-    <ComingSoon
-      title="Agents & LLM"
-      phase="0.1"
-      description="Claude Code, Codex, Gemini, MCP servers and the LLM provider."
-    />
-  )
+export default function AgentsPage() {
+  return <AgentsView />
 }

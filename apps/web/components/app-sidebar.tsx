@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
+import { Button } from "@workspace/ui/components/button"
 import {
   Sidebar,
   SidebarContent,
@@ -14,18 +15,18 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@workspace/ui/components/sidebar"
-import { BoxIcon, ExternalLinkIcon } from "lucide-react"
+import { ArrowUpRightIcon, LogOutIcon, MessageSquareIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { navGroups } from "@/lib/nav"
+import { api, go } from "@/lib/api"
+import { navGroups, samePath } from "@/lib/nav"
 import { orpc } from "@/lib/orpc"
-import { appIcons } from "./app-icons"
+import { Brand } from "./brand"
 
 export function AppSidebar() {
   const pathname = usePathname()
   const me = useQuery(orpc.auth.me.queryOptions())
   const info = useQuery(orpc.system.info.queryOptions())
-  const tools = useQuery(orpc.tools.status.queryOptions())
 
   return (
     <Sidebar collapsible="icon">
@@ -34,21 +35,28 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <BoxIcon className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">agentbox</span>
-                  <span className="truncate text-muted-foreground text-xs">
-                    {info.data?.hostname ?? "…"}
-                  </span>
-                </div>
+                <Brand subtitle={info.data?.hostname ?? "…"} />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Open Hermes UI" className="font-medium">
+                  <a href="/hermes/">
+                    <MessageSquareIcon />
+                    <span>Open Hermes UI</span>
+                    <ArrowUpRightIcon className="ml-auto size-3.5 opacity-60" />
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         {navGroups.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
@@ -58,7 +66,7 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.href}
+                      isActive={samePath(pathname, item.href)}
                       tooltip={item.title}
                     >
                       <Link href={item.href}>
@@ -72,38 +80,25 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
-        <SidebarGroup>
-          <SidebarGroupLabel>Apps</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {(tools.data?.apps ?? []).map((app) => {
-                const Icon = appIcons[app.id]
-                return (
-                  <SidebarMenuItem key={app.id}>
-                    {app.url ? (
-                      <SidebarMenuButton asChild tooltip={`Open ${app.name}`}>
-                        <a href={app.url} target="_blank" rel="noopener noreferrer">
-                          <Icon />
-                          <span>{app.name}</span>
-                          <ExternalLinkIcon className="ml-auto size-3 opacity-60" />
-                        </a>
-                      </SidebarMenuButton>
-                    ) : (
-                      <SidebarMenuButton disabled tooltip={`${app.name}: not reachable yet`}>
-                        <Icon />
-                        <span>{app.name}</span>
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="truncate px-2 text-muted-foreground text-xs group-data-[collapsible=icon]:hidden">
-          {me.data ? `${me.data.login} · via ${me.data.via}` : null}
+        <div className="flex items-center gap-2 px-2 group-data-[collapsible=icon]:hidden">
+          <div className="grid min-w-0 flex-1 text-xs leading-tight">
+            <span className="truncate font-medium">{me.data?.name ?? me.data?.login}</span>
+            <span className="truncate text-muted-foreground">{me.data?.login}</span>
+          </div>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            aria-label="Sign out"
+            title="Sign out"
+            onClick={async () => {
+              await api.logout().catch(() => {})
+              go("/login/")
+            }}
+          >
+            <LogOutIcon />
+          </Button>
         </div>
       </SidebarFooter>
       <SidebarRail />

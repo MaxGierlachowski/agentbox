@@ -1,0 +1,29 @@
+[Unit]
+Description=agentbox: edge proxy (Caddy) on :8080, :8081 and the LAN listener
+After=network-online.target agentbox-firewall.service
+Wants=network-online.target
+PartOf=agentbox.target
+
+[Service]
+Type=notify
+User=agentbox-edge
+Group=agentbox-edge
+Environment=HOME=/var/lib/agentbox/caddy XDG_DATA_HOME=/var/lib/agentbox/caddy XDG_CONFIG_HOME=/var/lib/agentbox/caddy
+# Read by systemd as root: AGENTBOX_PROXY_SECRET.
+EnvironmentFile=/etc/agentbox/env/caddy.env
+RuntimeDirectory=agentbox-caddy
+RuntimeDirectoryMode=0700
+ExecStart=/usr/local/bin/caddy run --environ=false --config /etc/agentbox/Caddyfile --adapter caddyfile
+ExecReload=/usr/local/bin/caddy reload --config /etc/agentbox/Caddyfile --adapter caddyfile --address unix//run/agentbox-caddy/admin.sock --force
+Restart=always
+RestartSec=2
+TimeoutStopSec=10
+LimitNOFILE=1048576
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/agentbox/caddy
+
+[Install]
+WantedBy=agentbox.target

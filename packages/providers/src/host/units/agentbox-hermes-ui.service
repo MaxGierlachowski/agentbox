@@ -1,0 +1,32 @@
+[Unit]
+Description=agentbox: Hermes UI (127.0.0.1:8787, behind /hermes/)
+After=network-online.target agentbox-hermes.service agentbox-paseo.service
+PartOf=agentbox.target
+
+[Service]
+Type=simple
+User=agentbox
+Group=agentbox
+WorkingDirectory=@HERMES_UI_DIR@
+Environment=HOME=/home/agentbox
+Environment=HERMES_HOME=/home/agentbox/.hermes
+Environment=HERMES_UI_PORT=8787
+Environment=HERMES_UI_HOST=127.0.0.1
+Environment=HERMES_UI_REMOTE=off
+Environment=HERMES_UI_AUTH=proxy
+Environment=HERMES_UI_BASE_PATH=/hermes
+Environment=HERMES_UI_DATA_DIR=/var/lib/agentbox/hermes-ui
+Environment=HERMES_UI_PAIRING_URL=/devices/?pair=1
+Environment=PASEO_MCP_URL=http://127.0.0.1:6790/mcp
+# HERMES_UI_PROXY_SECRET, PASEO_MCP_TOKEN
+EnvironmentFile=/etc/agentbox/env/hermes-ui.env
+ExecStart=/usr/local/bin/node @HERMES_UI_DIR@/bin/hermes-ui.mjs serve
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/agentbox/hermes-ui /home/agentbox/.hermes
+UMask=0077
+
+[Install]
+WantedBy=agentbox.target

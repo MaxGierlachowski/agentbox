@@ -1,6 +1,6 @@
 # 0004 – Access through Tailscale Serve on a Unix socket
 
-- Status: accepted (to be verified on a VM in spike S1)
+- Status: superseded by 0008 and 0009 (iroh is the only remote access)
 - Date: 2026-09-24
 
 ## Decision

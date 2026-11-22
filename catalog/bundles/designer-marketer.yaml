@@ -1,0 +1,45 @@
+id: designer-marketer
+name: Designer / Marketer
+description: Landing pages, visuals, infographics, social content and launch copy.
+roles: [designer-marketer]
+skills:
+  - skill.claude-design
+  - skill.frontend-design
+  - skill.baoyu-infographic
+  - skill.popular-web-designs
+  - skill.excalidraw
+  - skill.concept-diagrams
+  - skill.social-media-content-calendar
+  - skill.design-md
+  - skill.canvas-design
+  - skill.theme-factory
+  - skill.youtube-content
+  - skill.creative-ideation
+mcps:
+  - mcp.exa
+  - mcp.figma
+  - mcp.canva
+  - mcp.miro
+  - mcp.google-analytics
+  - mcp.notion
+clis: []
+opt_in:
+  - skill.design-md
+  - skill.youtube-content
+  - mcp.figma
+  - mcp.canva
+  - mcp.miro
+  - mcp.google-analytics
+  - mcp.notion
+soul_role: designer
+first_task: >-
+  Draft a launch announcement for something I'm working on - ask me three questions first, then
+  write versions for X, LinkedIn and a blog intro.
+first_task_alternatives:
+  - Design a one-page landing page as HTML for an idea I describe.
+  - Plan a four-week social media calendar for my product.
+  - Turn the article or notes I paste next into an infographic.
+suggested_sites:
+  - { name: Figma, url: "https://www.figma.com/login" }
+  - { name: Canva, url: "https://www.canva.com/login" }
+  - { name: LinkedIn, url: "https://www.linkedin.com/login" }

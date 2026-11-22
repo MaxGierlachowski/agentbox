@@ -11,6 +11,13 @@ type EventInput = RunEvent extends infer E
 
 const POLL_MS = 1000
 
+export interface JobContext {
+  signal: AbortSignal
+  log: (data: string, stream?: "stdout" | "stderr" | "info") => void
+  step: <T>(name: string, fn: () => Promise<T>) => Promise<T>
+  check: (id: string, status: "ok" | "warn" | "fail", message: string) => void
+}
+
 /**
  * Persists run events and fans them out to live subscribers.
  *
@@ -22,6 +29,7 @@ export class RunService {
   private readonly seqs = new Map<string, number>()
   private readonly waiters = new Map<string, Set<() => void>>()
   private readonly redactions = new Set<string>()
+  private readonly active = new Map<string, AbortController>()
 
   constructor(
     private readonly db: Db,
@@ -34,10 +42,87 @@ export class RunService {
     for (const v of values) if (v.length >= 4) this.redactions.add(v)
   }
 
-  create(kind: RunSummary["kind"], actor: string): RunSummary {
+  /** Extra values to redact on top of the secret store (e.g. tokens seen in a PTY). */
+  addRedaction(value: string) {
+    if (value.length >= 4) this.redactions.add(value)
+  }
+
+  /**
+   * Runs `job` in the background as a run with live events. `step` groups log lines under a
+   * provider name in the UI; the run fails if the job throws.
+   */
+  start(title: string, actor: string, job: (ctx: JobContext) => Promise<void>): RunSummary {
+    const run = this.create("apply", actor, title)
+    const controller = new AbortController()
+    this.active.set(run.id, controller)
+    let current = "agentbox"
+    const ctx: JobContext = {
+      signal: controller.signal,
+      log: (data, stream = "info") =>
+        this.append(run.id, { type: "provider.log", provider: current, stream, data }),
+      step: async (name, fn) => {
+        const started = Date.now()
+        current = name
+        this.append(run.id, { type: "provider.started", provider: name })
+        try {
+          const result = await fn()
+          this.append(run.id, {
+            type: "provider.finished",
+            provider: name,
+            outcome: "ok",
+            durationMs: Date.now() - started,
+          })
+          return result
+        } catch (err) {
+          this.append(run.id, {
+            type: "provider.log",
+            provider: name,
+            stream: "stderr",
+            data: `${(err as Error).message}\n`,
+          })
+          this.append(run.id, {
+            type: "provider.finished",
+            provider: name,
+            outcome: controller.signal.aborted ? "cancelled" : "failed",
+            durationMs: Date.now() - started,
+          })
+          throw err
+        }
+      },
+      check: (id, status, message) =>
+        this.append(run.id, { type: "check.result", provider: current, id, status, message }),
+    }
+    void job(ctx)
+      .then(() => this.append(run.id, { type: "run.finished", status: "succeeded" }))
+      .catch(() =>
+        this.append(run.id, {
+          type: "run.finished",
+          status: controller.signal.aborted ? "cancelled" : "failed",
+        }),
+      )
+      .finally(() => this.active.delete(run.id))
+    return this.get(run.id)
+  }
+
+  cancel(id: string) {
+    const controller = this.active.get(id)
+    controller?.abort()
+    return Boolean(controller)
+  }
+
+  /** Resolves when the run finished; returns its final status. */
+  async wait(id: string) {
+    for await (const event of this.stream(id, 0)) {
+      if (event.type === "run.finished") return event.status
+    }
+    return this.get(id).status
+  }
+
+  create(kind: RunSummary["kind"], actor: string, title = ""): RunSummary {
     const run = {
       id: crypto.randomUUID(),
       workspace: this.workspace,
+      title,
       kind,
       status: "running" as const,
       actor,
@@ -150,6 +235,7 @@ function toSummary(run: typeof schema.runs.$inferSelect): RunSummary {
   return {
     id: run.id,
     kind: run.kind,
+    title: run.title,
     status: run.status,
     startedAt: run.startedAt,
     finishedAt: run.finishedAt,

@@ -1,0 +1,57 @@
+id: founder-ops
+name: Founder / Ops
+description: Inbox triage, planning, competitor and price watching, and light business operations.
+roles: [founder-ops]
+skills:
+  - skill.competitor-news-monitor
+  - skill.product-price-monitor
+  - skill.architecture-diagram
+  - skill.one-three-one-rule
+  - skill.grill-me
+  - skill.internal-comms
+  - skill.microsoft-office
+mcps:
+  - mcp.gmail
+  - mcp.google-calendar
+  - mcp.slack
+  - mcp.exa
+  - mcp.stripe
+  - mcp.notion
+  - mcp.linear
+  - mcp.posthog
+  - mcp.todoist
+clis: []
+opt_in:
+  - skill.product-price-monitor
+  - mcp.stripe
+  - mcp.notion
+  - mcp.linear
+  - mcp.posthog
+  - mcp.todoist
+soul_role: manager
+first_task: >-
+  Triage my inbox: sort the last 48 hours of email into urgent, this week and FYI, and draft (don't
+  send) replies to the urgent ones.
+first_task_alternatives:
+  - Plan my week from my calendar and open email threads, with the three things that matter most.
+  - Pick three competitors with me and show me what a weekly news digest about them would look like.
+  - Write a 1-3-1 brief on a decision I'm facing - ask me what you need to know first.
+suggested_sites:
+  - { name: Google, url: "https://accounts.google.com/" }
+  - { name: Slack, url: "https://slack.com/signin" }
+  - { name: Stripe, url: "https://dashboard.stripe.com/login" }
+suggested_crons:
+  - name: morning-brief
+    schedule: "0 8 * * 1-5"
+    prompt: >-
+      Morning brief: today's meetings, emails from the last 24 hours that need me, and the three
+      most important things for today. Draft nothing.
+    deliver: home
+    skills: [skill.email-inbox-triage]
+    enabled: false
+  - name: competitor-digest
+    schedule: "0 9 * * 1"
+    prompt: Weekly digest of material news about the competitors I named, with sources.
+    deliver: home
+    skills: [skill.competitor-news-monitor]
+    enabled: false

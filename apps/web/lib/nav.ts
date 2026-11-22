@@ -1,50 +1,40 @@
 import {
   BotIcon,
-  BotMessageSquareIcon,
-  BoxesIcon,
-  FileCodeIcon,
-  FolderGitIcon,
   HistoryIcon,
-  KeyRoundIcon,
   LayoutDashboardIcon,
   type LucideIcon,
+  MonitorIcon,
   PackageIcon,
-  PlayIcon,
-  ServerIcon,
   SettingsIcon,
-  WrenchIcon,
+  SmartphoneIcon,
 } from "lucide-react"
 
 export interface NavItem {
   title: string
   href: string
   icon: LucideIcon
-  /** Phase in which the page gets real content. */
-  phase: "0" | "0.1" | "0.2"
 }
 
 export const navGroups: { label: string; items: NavItem[] }[] = [
   {
-    label: "Workspace",
+    label: "Box",
     items: [
-      { title: "Overview", href: "/", icon: LayoutDashboardIcon, phase: "0" },
-      { title: "Environment", href: "/environment/", icon: ServerIcon, phase: "0.1" },
-      { title: "Image & Toolchains", href: "/image/", icon: PackageIcon, phase: "0.1" },
-      { title: "Repositories", href: "/repos/", icon: FolderGitIcon, phase: "0.1" },
-      { title: "Credentials", href: "/credentials/", icon: KeyRoundIcon, phase: "0.1" },
-      { title: "Agents & LLM", href: "/agents/", icon: BotIcon, phase: "0.1" },
-      { title: "Services", href: "/services/", icon: BoxesIcon, phase: "0.2" },
-      { title: "Tools", href: "/tools/", icon: WrenchIcon, phase: "0.2" },
+      { title: "Overview", href: "/", icon: LayoutDashboardIcon },
+      { title: "Devices", href: "/devices/", icon: SmartphoneIcon },
+      { title: "Browser", href: "/desktop/", icon: MonitorIcon },
+      { title: "Runs", href: "/runs/", icon: HistoryIcon },
     ],
   },
   {
-    label: "Operations",
+    label: "Configure",
     items: [
-      { title: "Review & Apply", href: "/apply/", icon: PlayIcon, phase: "0.1" },
-      { title: "Automation", href: "/automation/", icon: BotMessageSquareIcon, phase: "0.2" },
-      { title: "Runs", href: "/runs/", icon: HistoryIcon, phase: "0" },
-      { title: "Spec (YAML)", href: "/spec/", icon: FileCodeIcon, phase: "0.1" },
-      { title: "Settings", href: "/settings/", icon: SettingsIcon, phase: "0.1" },
+      { title: "Toolkit", href: "/toolkit/", icon: PackageIcon },
+      { title: "Agents", href: "/agents/", icon: BotIcon },
+      { title: "Settings", href: "/settings/", icon: SettingsIcon },
     ],
   },
 ]
+
+/** usePathname() drops the trailing slash; hrefs keep it (trailingSlash: true). */
+export const samePath = (a: string, b: string) =>
+  (a.replace(/\/+$/, "") || "/") === (b.replace(/\/+$/, "") || "/")

@@ -24,7 +24,10 @@ function RunList() {
   const runs = useQuery(orpc.runs.list.queryOptions({ input: { limit: 100 } }))
   return (
     <>
-      <PageHeader title="Runs" description="History of plans, applies and verifies." />
+      <PageHeader
+        title="Runs"
+        description="Installs, clones and checks, from the UI, the CLI and Hermes."
+      />
       <Card>
         <CardContent>
           {runs.data ? <RunsTable runs={runs.data} /> : <Skeleton className="h-40" />}
@@ -49,7 +52,9 @@ function RunDetail({ id }: { id: string }) {
             <StatusBadge status={status} />
           </span>
         }
-        description={run.data ? `${run.data.kind} by ${run.data.actor}` : undefined}
+        description={
+          run.data ? `${run.data.title} · ${run.data.kind} by ${run.data.actor}` : undefined
+        }
         actions={
           <>
             <Button variant="outline" asChild>

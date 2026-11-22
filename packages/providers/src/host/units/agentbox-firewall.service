@@ -1,0 +1,12 @@
+[Unit]
+Description=agentbox: firewall rules (iroh ingress owner match, KasmVNC UDP)
+Before=agentbox-iroh.service agentbox-caddy.service
+PartOf=agentbox.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/agentbox/firewall.sh
+
+[Install]
+WantedBy=agentbox.target

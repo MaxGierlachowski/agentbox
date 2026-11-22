@@ -1,0 +1,174 @@
+# Skills from github.com/anthropics/skills, pinned to one commit (Apache-2.0 per skill LICENSE.txt).
+# docx, pdf, pptx and xlsx are source-available, not open source, and are left out on purpose.
+items:
+  - id: skill.frontend-design
+    kind: skill
+    name: "Frontend design"
+    summary: "Distinctive, production-grade frontend interfaces instead of generic layouts."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [developer, designer-marketer]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/frontend-design
+    targets: [hermes, claude]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/frontend-design
+  - id: skill.webapp-testing
+    kind: skill
+    name: "Web app testing"
+    summary: "Test local web applications with Playwright: screenshots, logs, interactions."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [developer]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/webapp-testing
+    targets: [hermes, claude]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/webapp-testing
+    notes: "Needs Python Playwright and a Chromium build on the box."
+  - id: skill.mcp-builder
+    kind: skill
+    name: "MCP builder"
+    summary: "Design and build high-quality MCP servers."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [developer]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/mcp-builder
+    targets: [hermes, claude]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/mcp-builder
+  - id: skill.skill-creator
+    kind: skill
+    name: "Skill creator"
+    summary: "Create, improve and evaluate agent skills."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [developer, custom]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/skill-creator
+    targets: [hermes, claude]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/skill-creator
+  - id: skill.claude-api
+    kind: skill
+    name: "Claude API"
+    summary: "Build apps on the Claude API and Anthropic SDKs."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [developer]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/claude-api
+    targets: [hermes, claude]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/claude-api
+  - id: skill.web-artifacts-builder
+    kind: skill
+    name: "Web artifacts builder"
+    summary: "Multi-component HTML artifacts with React, Tailwind and shadcn/ui."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [developer, designer-marketer]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/web-artifacts-builder
+    targets: [hermes, claude]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/web-artifacts-builder
+  - id: skill.canvas-design
+    kind: skill
+    name: "Canvas design"
+    summary: "Posters and visual art as PNG or PDF from a design philosophy."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [designer-marketer]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/canvas-design
+    targets: [hermes]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/canvas-design
+  - id: skill.theme-factory
+    kind: skill
+    name: "Theme factory"
+    summary: "Apply consistent colour and font themes to slides, docs and pages."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [designer-marketer]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/theme-factory
+    targets: [hermes]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/theme-factory
+  - id: skill.algorithmic-art
+    kind: skill
+    name: "Algorithmic art"
+    summary: "Generative art with p5.js and seeded randomness."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [designer-marketer]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/algorithmic-art
+    targets: [hermes]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/algorithmic-art
+  - id: skill.internal-comms
+    kind: skill
+    name: "Internal comms"
+    summary: "Status reports, updates, newsletters and FAQs in a house format."
+    source: [curated, anthropics-skills]
+    tier: T0
+    licence: Apache-2.0
+    roles: [manager, founder-ops, support]
+    install:
+      skill:
+        source: git
+        repo: https://github.com/anthropics/skills
+        sha: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+        path: skills/internal-comms
+    targets: [hermes]
+    pinned_version: e4bb5d960d87126ff3b3a8af1a104b7db67560ba
+    homepage: https://github.com/anthropics/skills/tree/e4bb5d960d87126ff3b3a8af1a104b7db67560ba/skills/internal-comms

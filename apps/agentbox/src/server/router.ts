@@ -1,23 +1,11 @@
-import { hostname } from "node:os"
 import { implement, ORPCError, withEventMeta } from "@orpc/server"
 import { contract, type Identity } from "@workspace/contract"
-import type { SecretStore } from "@workspace/infra/secrets"
-import pkg from "../../package.json" with { type: "json" }
-import type { AutomationService } from "../automation/service"
-import { runDemo } from "../runs/demo"
-import type { RunService } from "../runs/service"
-import type { ToolsService } from "../tools/service"
+import type { Via } from "../auth/auth"
+import type { Services } from "../services"
 
 export interface RpcContext {
   identity: Identity | null
-}
-
-export interface RouterDeps {
-  runs: RunService
-  secrets: SecretStore
-  tools: ToolsService
-  automation: AutomationService
-  startedAt: Date
+  via: Via
 }
 
 const os = implement(contract).$context<RpcContext>()
@@ -27,84 +15,176 @@ const authed = os.middleware(({ context, next }) => {
   return next({ context: { identity: context.identity } })
 })
 
-export function createRouter({ runs, secrets, tools, automation, startedAt }: RouterDeps) {
-  const active = new Map<string, AbortController>()
+const cliOnly = os.middleware(({ context, next }) => {
+  if (context.identity?.via !== "cli") throw new ORPCError("FORBIDDEN")
+  return next()
+})
 
+/** Maps service errors to 400s with their message; ORPCErrors pass through. */
+async function guard<T>(fn: () => T | Promise<T>): Promise<T> {
+  try {
+    return await fn()
+  } catch (err) {
+    if (err instanceof ORPCError) throw err
+    throw new ORPCError("BAD_REQUEST", { message: (err as Error).message })
+  }
+}
+
+export function createRouter(s: Services) {
+  const a = os.use(authed)
   return os.router({
     system: {
-      info: os.system.info.use(authed).handler(() => ({
-        version: pkg.version,
-        hostname: hostname(),
-        platform: process.platform,
-        arch: process.arch,
-        startedAt: startedAt.toISOString(),
-      })),
+      info: a.system.info.handler(() => s.system.info()),
+      doctor: a.system.doctor.handler(() => guard(() => s.system.doctor())),
+      services: a.system.services.handler(() => guard(() => s.system.services())),
     },
     auth: {
-      me: os.auth.me.use(authed).handler(({ context }) => context.identity),
+      me: a.auth.me.handler(({ context }) => context.identity),
+      changePassword: a.auth.changePassword.handler(({ input }) =>
+        guard(async () => {
+          if (!(await s.auth.verifyPassword(input.current)))
+            throw new Error("The current password is wrong")
+          await s.auth.setPassword(input.next)
+          return { ok: true }
+        }),
+      ),
     },
-    secrets: {
-      status: os.secrets.status.use(authed).handler(async () => ({
-        initialized: await secrets.isInitialized(),
-        sealed: secrets.sealed,
-      })),
-      unlock: os.secrets.unlock.use(authed).handler(async ({ input }) => {
-        if (await secrets.isInitialized()) {
-          try {
-            await secrets.unlock(input.passphrase)
-          } catch (err) {
-            throw new ORPCError("BAD_REQUEST", { message: (err as Error).message })
-          }
-        } else {
-          await secrets.init(input.passphrase)
-        }
-        runs.setRedactions(secrets.values())
-        return { initialized: true, sealed: false }
+    admin: {
+      issueOtp: a.admin.issueOtp.use(cliOnly).handler(({ input }) => {
+        if (input.purpose === "claim" && s.auth.hasOwner())
+          throw new ORPCError("CONFLICT", {
+            message: "The box is already claimed; use `agentbox reset-owner`.",
+          })
+        if (input.purpose === "reset" && !s.auth.hasOwner())
+          throw new ORPCError("CONFLICT", {
+            message: "Nobody has claimed the box yet; use `agentbox otp`.",
+          })
+        const { otp, expiresAt } = s.auth.issueOtp(input.purpose)
+        return { otp, expiresAt: expiresAt.toISOString() }
       }),
     },
-    tools: {
-      status: os.tools.status.use(authed).handler(() => tools.status()),
-      save: os.tools.save.use(authed).handler(async ({ input }) => {
-        if (secrets.sealed)
-          throw new ORPCError("PRECONDITION_FAILED", { message: "Unlock agentbox first." })
-        try {
-          const status = await tools.save(input)
-          runs.setRedactions(secrets.values())
-          return status
-        } catch (err) {
-          throw new ORPCError("BAD_REQUEST", { message: (err as Error).message })
-        }
-      }),
+    onboarding: {
+      get: a.onboarding.get.handler(() => s.onboarding.get()),
+      save: a.onboarding.save.handler(({ input }) => guard(() => s.onboarding.save(input))),
+      complete: a.onboarding.complete.handler(() =>
+        guard(async () => {
+          // Skipped the SOUL step? Hermes still gets one that knows the user and the box.
+          await s.soul.regenerate(false)
+          return s.onboarding.complete()
+        }),
+      ),
     },
-    automation: {
-      status: os.automation.status.use(authed).handler(() => automation.status()),
-      save: os.automation.save.use(authed).handler(({ input }) => automation.save(input)),
-      pollNow: os.automation.pollNow.use(authed).handler(() => automation.pollNow()),
+    ai: {
+      status: a.ai.status.handler(() => guard(() => s.ai.status())),
+      accountLoginStart: a.ai.accountLoginStart.handler(({ input }) =>
+        guard(() => s.ai.accountLoginStart(input.label)),
+      ),
+      accountLoginFinish: a.ai.accountLoginFinish.handler(({ input }) =>
+        guard(() => s.ai.accountLoginFinish(input.flowId, input.code)),
+      ),
+      hermesLoginStart: a.ai.hermesLoginStart.handler(({ input }) =>
+        guard(() => s.ai.hermesLoginStart(input.model)),
+      ),
+      accountRemove: a.ai.accountRemove.handler(({ input }) =>
+        guard(() => s.ai.accountRemove(input.slug)),
+      ),
+      accountSetDefault: a.ai.accountSetDefault.handler(({ input }) =>
+        guard(() => s.ai.accountSetDefault(input.slug)),
+      ),
+      setApiKey: a.ai.setApiKey.handler(({ input }) =>
+        guard(() => s.ai.setApiKey(input.provider, input.key)),
+      ),
+      removeApiKey: a.ai.removeApiKey.handler(({ input }) =>
+        guard(() => s.ai.removeApiKey(input.provider)),
+      ),
+      setHermesModel: a.ai.setHermesModel.handler(({ input }) =>
+        guard(() => s.ai.setHermesModel(input)),
+      ),
+      probe: a.ai.probe.handler(() => guard(() => s.ai.probe())),
+    },
+    flows: {
+      get: a.flows.get.handler(({ input }) => guard(() => s.flows.get(input.flowId))),
+      cancel: a.flows.cancel.handler(({ input }) => guard(() => s.flows.cancel(input.flowId))),
+    },
+    catalog: {
+      search: a.catalog.search.handler(({ input }) => guard(() => s.catalog.search(input))),
+      get: a.catalog.get.handler(({ input }) => guard(() => s.catalog.get(input.id))),
+      suggest: a.catalog.suggest.handler(({ input }) => guard(() => s.catalog.suggest(input))),
+    },
+    toolkit: {
+      get: a.toolkit.get.handler(() => guard(() => s.toolkit.get())),
+      apply: a.toolkit.apply.handler(({ input, context }) =>
+        guard(() => s.toolkit.apply(input.add, input.remove, context.identity.login, input.env)),
+      ),
+      connect: a.toolkit.connect.handler(({ input }) => guard(() => s.toolkit.connect(input.id))),
+    },
+    soul: {
+      get: a.soul.get.handler(() => guard(() => s.soul.get())),
+      save: a.soul.save.handler(({ input }) => guard(() => s.soul.save(input.markdown))),
+      regenerate: a.soul.regenerate.handler(({ input }) =>
+        guard(() => s.soul.regenerate(input.ai)),
+      ),
+    },
+    clis: {
+      status: a.clis.status.handler(() => guard(() => s.clis.status())),
+      authStart: a.clis.authStart.handler(({ input }) =>
+        guard(() => s.clis.authStart(input.cli, input.host)),
+      ),
+      setToken: a.clis.setToken.handler(({ input }) =>
+        guard(() => s.clis.setToken(input.cli, input.host, input.token)),
+      ),
+    },
+    git: {
+      identity: a.git.identity.handler(() => guard(() => s.git.identity())),
+      setIdentity: a.git.setIdentity.handler(({ input }) => guard(() => s.git.setIdentity(input))),
+    },
+    ssh: {
+      status: a.ssh.status.handler(() => guard(() => s.git.sshStatus())),
+      generate: a.ssh.generate.handler(() => guard(() => s.git.sshGenerate())),
+      register: a.ssh.register.handler(({ input }) => guard(() => s.git.sshRegister(input.host))),
+    },
+    repos: {
+      list: a.repos.list.handler(({ input }) => guard(() => s.git.listRemote(input.host))),
+      local: a.repos.local.handler(() => guard(() => s.git.listLocal())),
+      clone: a.repos.clone.handler(({ input, context }) =>
+        guard(() => s.git.clone(input.repos, context.identity.login)),
+      ),
+    },
+    profiles: {
+      list: a.profiles.list.handler(() => guard(() => s.profiles.list())),
+      draft: a.profiles.draft.handler(() => guard(() => s.profiles.draft())),
+      create: a.profiles.create.handler(({ input }) => guard(() => s.profiles.create(input))),
+      remove: a.profiles.remove.handler(({ input }) => guard(() => s.profiles.remove(input.slug))),
+    },
+    browser: {
+      status: a.browser.status.handler(() => guard(() => s.browser.status())),
+      setLock: a.browser.setLock.handler(({ input }) =>
+        guard(() => s.browser.setLock(input.locked)),
+      ),
+      open: a.browser.open.handler(({ input }) => guard(() => s.browser.open(input.url))),
+    },
+    devices: {
+      list: a.devices.list.handler(() => s.devices.list()),
+      pairStart: a.devices.pairStart.handler(({ input }) =>
+        guard(() => s.devices.pairStart(input.kind)),
+      ),
+      revoke: a.devices.revoke.handler(({ input }) =>
+        guard(async () => ({ ok: await s.devices.revoke(input.id) })),
+      ),
     },
     runs: {
-      list: os.runs.list.use(authed).handler(({ input }) => runs.list(input.limit)),
-      get: os.runs.get.use(authed).handler(({ input }) => {
+      list: a.runs.list.handler(({ input }) => s.runs.list(input.limit)),
+      get: a.runs.get.handler(({ input }) => {
         try {
-          return runs.get(input.id)
+          return s.runs.get(input.id)
         } catch {
           throw new ORPCError("NOT_FOUND")
         }
       }),
-      demo: os.runs.demo.use(authed).handler(({ context }) => {
-        const run = runs.create("apply", context.identity.login)
-        const controller = new AbortController()
-        active.set(run.id, controller)
-        void runDemo(runs, run.id, controller.signal).finally(() => active.delete(run.id))
-        return run
-      }),
-      cancel: os.runs.cancel.use(authed).handler(({ input }) => {
-        const controller = active.get(input.id)
-        controller?.abort()
-        return { ok: Boolean(controller) }
-      }),
-      events: os.runs.events.use(authed).handler(async function* ({ input, lastEventId, signal }) {
+      cancel: a.runs.cancel.handler(({ input }) => ({ ok: s.runs.cancel(input.id) })),
+      events: a.runs.events.handler(async function* ({ input, lastEventId, signal }) {
         const from = lastEventId === undefined ? 0 : Number(lastEventId) + 1
-        for await (const event of runs.stream(input.id, from, signal)) {
+        for await (const event of s.runs.stream(input.id, from, signal)) {
           yield withEventMeta(event, { id: String(event.seq) })
         }
       }),

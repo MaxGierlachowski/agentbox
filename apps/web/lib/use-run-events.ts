@@ -2,8 +2,8 @@
 
 import { useQueryClient } from "@tanstack/react-query"
 import type { RunEvent, RunStatus } from "@workspace/contract"
-import { useEffect, useState } from "react"
-import { client, orpc } from "./orpc"
+import { useEffect, useEffectEvent, useState } from "react"
+import { client } from "./orpc"
 
 export interface RunStreamState {
   events: RunEvent[]
@@ -37,18 +37,19 @@ function toChunk(e: RunEvent): string | null {
  * Follows a run's event stream. Reconnects forever on network errors; the retry plugin sends
  * the last seen event id, so the server replays exactly what was missed.
  */
-export function useRunEvents(runId: string | null): RunStreamState {
+export function useRunEvents(
+  runId: string | null,
+  onFinished?: (status: RunStatus) => void,
+): RunStreamState {
   const queryClient = useQueryClient()
-  const [state, setState] = useState<RunStreamState>({
-    events: [],
-    chunks: [],
-    status: "connecting",
-    error: null,
+  const [state, setState] = useState<RunStreamState & { runId: string | null }>({
+    ...initial,
+    runId: null,
   })
+  const finished = useEffectEvent((status: RunStatus) => onFinished?.(status))
 
   useEffect(() => {
     if (!runId) return
-    setState({ events: [], chunks: [], status: "connecting", error: null })
     const controller = new AbortController()
     void (async () => {
       try {
@@ -57,9 +58,11 @@ export function useRunEvents(runId: string | null): RunStreamState {
           { signal: controller.signal, context: { retry: Number.POSITIVE_INFINITY } },
         )
         for await (const event of stream) {
-          setState((s) => {
+          setState((prev) => {
+            const s = prev.runId === runId ? prev : { ...initial, runId }
             const chunk = toChunk(event)
             return {
+              runId,
               events: [...s.events, event],
               chunks: chunk ? [...s.chunks, chunk] : s.chunks,
               status: event.type === "run.finished" ? event.status : "running",
@@ -67,17 +70,22 @@ export function useRunEvents(runId: string | null): RunStreamState {
             }
           })
           if (event.type === "run.finished") {
-            void queryClient.invalidateQueries({ queryKey: orpc.runs.key() })
+            void queryClient.invalidateQueries()
+            finished(event.status)
           }
         }
       } catch (err) {
         if (!controller.signal.aborted) {
-          setState((s) => ({ ...s, error: err instanceof Error ? err.message : String(err) }))
+          const error = err instanceof Error ? err.message : String(err)
+          setState((prev) => ({ ...(prev.runId === runId ? prev : { ...initial, runId }), error }))
         }
       }
     })()
     return () => controller.abort()
   }, [runId, queryClient])
 
-  return state
+  // A new run id shows an empty log until its first event arrives.
+  return state.runId === runId ? state : initial
 }
+
+const initial: RunStreamState = { events: [], chunks: [], status: "connecting", error: null }

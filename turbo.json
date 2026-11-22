@@ -21,6 +21,15 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
+    "@workspace/contract#test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/catalog/**",
+        "$TURBO_ROOT$/scripts/catalog-validate.ts"
+      ],
+      "outputs": []
+    },
     "dev": {
       "cache": false,
       "persistent": true
