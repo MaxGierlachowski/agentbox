@@ -180,4 +180,15 @@ const index = `<h1>Documents</h1>
 <div class="cards">${adrs.map((a) => `<a href="adr/${a.file}/"><b>${a.title}</b><span>${a.status}</span></a>`).join("")}</div>`
 await write("docs", page({ title: "Documents", lang: "en", depth: 1, body: index }))
 
-console.log(`built _site/ with ${adrs.length} decision records`)
+// The installer, served from Pages: https://<owner>.github.io/agentbox/install.sh. It downloads the
+// release of the version baked in here (the agentbox package version at build time).
+const { version } = (await Bun.file(join(root, "apps/agentbox/package.json")).json()) as {
+  version: string
+}
+const installer = (await Bun.file(join(root, "scripts/install.sh")).text()).replace(
+  /^AGENTBOX_VERSION=.*$/m,
+  `AGENTBOX_VERSION="\${AGENTBOX_VERSION:-${version}}"`,
+)
+await Bun.write(join(out, "install.sh"), installer)
+
+console.log(`built _site/ with ${adrs.length} decision records and install.sh (${version})`)
