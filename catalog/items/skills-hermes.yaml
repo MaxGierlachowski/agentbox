@@ -1,0 +1,670 @@
+# Skills that ship with Hermes v0.23.3 (bundled `skills/` and `optional-skills/`).
+# Every path is checked against the pinned tag: bun scripts/catalog-validate.ts --hermes-repo <path>
+items:
+  - id: skill.grounded-citations
+    kind: skill
+    name: "Grounded citations"
+    summary: "Ground answers and documents in cited, verifiable sources."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: hermes-builtin, path: skills/research/grounded-citations, category: research }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/research/grounded-citations
+  - id: skill.document-to-action-items
+    kind: skill
+    name: "Document to action items"
+    summary: "Extract cited obligations, deadlines and tasks from documents."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: hermes-builtin, path: skills/productivity/document-to-action-items, category: productivity }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/productivity/document-to-action-items
+  - id: skill.meeting-action-items
+    kind: skill
+    name: "Meeting action items"
+    summary: "Turn meeting notes into cited decisions, owners and tickets."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops]
+    install:
+      skill: { source: hermes-builtin, path: skills/productivity/meeting-action-items, category: productivity }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/productivity/meeting-action-items
+  - id: skill.email-inbox-triage
+    kind: skill
+    name: "Email inbox triage"
+    summary: "Prioritize inbox threads and draft replies without sending them."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops, support]
+    install:
+      skill: { source: hermes-builtin, path: skills/email/email-inbox-triage, category: email }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/email/email-inbox-triage
+  - id: skill.weekly-review-planning
+    kind: skill
+    name: "Weekly review"
+    summary: "Weekly reset: commitments, stalled work and a plan for next week."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops]
+    install:
+      skill: { source: hermes-builtin, path: skills/productivity/weekly-review-planning, category: productivity }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/productivity/weekly-review-planning
+  - id: skill.humanizer
+    kind: skill
+    name: "Humanizer"
+    summary: "Rewrite text to drop AI-isms and sound like a person."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer, support]
+    install:
+      skill: { source: hermes-builtin, path: skills/creative/humanizer, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/creative/humanizer
+  - id: skill.pdf
+    kind: skill
+    name: "PDF"
+    summary: "Create, read, merge, fill, OCR and edit PDF files."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: hermes-builtin, path: skills/productivity/pdf, category: productivity }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/productivity/pdf
+  - id: skill.blocked-page-recovery
+    kind: skill
+    name: "Blocked page recovery"
+    summary: "Recover when a fetch fails with 403/429, a paywall, a WAF or a bot wall."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: hermes-builtin, path: skills/web/blocked-page-recovery, category: web }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/web/blocked-page-recovery
+  - id: skill.github
+    kind: skill
+    name: "GitHub (gh)"
+    summary: "PRs, issues, reviews and repos through the gh CLI."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer, devops]
+    install:
+      skill: { source: hermes-builtin, path: skills/software-development/github, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/software-development/github
+    requires: [cli.gh]
+  - id: skill.systematic-debugging
+    kind: skill
+    name: "Systematic debugging"
+    summary: "Four-phase root-cause debugging: understand the bug before fixing it."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer, devops]
+    install:
+      skill: { source: hermes-builtin, path: skills/software-development/systematic-debugging, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/software-development/systematic-debugging
+  - id: skill.test-driven-development
+    kind: skill
+    name: "Test-driven development"
+    summary: "Red, green, refactor: tests before code."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: skills/software-development/test-driven-development, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/software-development/test-driven-development
+  - id: skill.requesting-code-review
+    kind: skill
+    name: "Requesting code review"
+    summary: "Pre-commit review with a security scan and quality gates."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: skills/software-development/requesting-code-review, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/software-development/requesting-code-review
+  - id: skill.simplify-code
+    kind: skill
+    name: "Simplify code"
+    summary: "Clean up recent code changes with parallel reviewers."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: skills/software-development/simplify-code, category: software-development }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/software-development/simplify-code
+  - id: skill.spike
+    kind: skill
+    name: "Spike"
+    summary: "Throwaway experiments that validate an idea before building it."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: skills/software-development/spike, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/software-development/spike
+  - id: skill.codebase-inspection
+    kind: skill
+    name: "Codebase inspection"
+    summary: "Lines of code, languages and ratios of a repository via pygount."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: skills/software-development/codebase-inspection, category: software-development }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/software-development/codebase-inspection
+    notes: "Needs pygount (pip install pygount) on the box."
+  - id: skill.dogfood
+    kind: skill
+    name: "Dogfood QA"
+    summary: "Exploratory QA of web apps with evidence and bug reports."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer, designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: skills/software-development/dogfood, category: software-development }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/software-development/dogfood
+  - id: skill.claude-code
+    kind: skill
+    name: "Claude Code"
+    summary: "Delegate coding work to the Claude Code CLI."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: skills/autonomous-ai-agents/claude-code, category: autonomous-ai-agents }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/autonomous-ai-agents/claude-code
+  - id: skill.ast-grep
+    kind: skill
+    name: "ast-grep"
+    summary: "Structural code search and rewrite with ast-grep."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/software-development/ast-grep, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/software-development/ast-grep
+    notes: "Needs the ast-grep binary."
+  - id: skill.code-wiki
+    kind: skill
+    name: "Code wiki"
+    summary: "Generate wiki docs and Mermaid diagrams for a codebase."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/software-development/code-wiki, category: software-development }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/software-development/code-wiki
+  - id: skill.rest-graphql-debug
+    kind: skill
+    name: "REST/GraphQL debugging"
+    summary: "Debug HTTP APIs: status codes, auth, schemas and minimal repros."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer, support]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/software-development/rest-graphql-debug, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/software-development/rest-graphql-debug
+  - id: skill.node-inspect-debugger
+    kind: skill
+    name: "Node.js debugger"
+    summary: "Debug Node.js through --inspect and the DevTools protocol."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/software-development/node-inspect-debugger, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/software-development/node-inspect-debugger
+  - id: skill.python-debugpy
+    kind: skill
+    name: "Python debugger"
+    summary: "Debug Python with pdb and debugpy."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer, data]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/software-development/python-debugpy, category: software-development }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/software-development/python-debugpy
+  - id: skill.grill-me
+    kind: skill
+    name: "Grill me"
+    summary: "Adversarial interview of a plan before implementation starts."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [developer, founder-ops]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/software-development/grill-me, category: software-development }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/software-development/grill-me
+  - id: skill.competitor-news-monitor
+    kind: skill
+    name: "Competitor news monitor"
+    summary: "Watch named companies for material news and send cited digests."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops, designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: skills/research/competitor-news-monitor, category: research }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/research/competitor-news-monitor
+  - id: skill.product-price-monitor
+    kind: skill
+    name: "Price monitor"
+    summary: "Watch product, flight or listing prices and alert on a target."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [founder-ops]
+    install:
+      skill: { source: hermes-builtin, path: skills/productivity/product-price-monitor, category: productivity }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/productivity/product-price-monitor
+  - id: skill.architecture-diagram
+    kind: skill
+    name: "Architecture diagram"
+    summary: "SVG architecture, cloud and infrastructure diagrams as HTML."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops, developer, devops]
+    install:
+      skill: { source: hermes-builtin, path: skills/creative/architecture-diagram, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/creative/architecture-diagram
+  - id: skill.microsoft-office
+    kind: skill
+    name: "Office documents"
+    summary: "Create, read and edit Word, PowerPoint and Excel files."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops, data]
+    install:
+      skill: { source: hermes-builtin, path: skills/productivity/microsoft-office, category: productivity }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/productivity/microsoft-office
+  - id: skill.one-three-one-rule
+    kind: skill
+    name: "1-3-1 decision brief"
+    summary: "Decision briefs: the problem, three options, one recommendation."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/communication/one-three-one-rule, category: communication }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/communication/one-three-one-rule
+  - id: skill.decision-questionnaire
+    kind: skill
+    name: "Decision questionnaire"
+    summary: "Turn an open decision into a questionnaire for the people who know."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, founder-ops]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/productivity/decision-questionnaire, category: productivity }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/productivity/decision-questionnaire
+  - id: skill.jupyter-notebook
+    kind: skill
+    name: "Jupyter notebook"
+    summary: "Iterative Python analysis in a live Jupyter kernel."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [data]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/data-science/jupyter-notebook, category: data-science }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/data-science/jupyter-notebook
+  - id: skill.live-dashboard
+    kind: skill
+    name: "Live dashboard"
+    summary: "Build self-updating dashboards from live data sources."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [data, manager]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/productivity/live-dashboard, category: productivity }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/productivity/live-dashboard
+  - id: skill.docker-management
+    kind: skill
+    name: "Docker management"
+    summary: "Manage containers, images, volumes and Compose stacks."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [devops, developer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/devops/docker-management, category: devops }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/devops/docker-management
+    requires: [cli.docker]
+  - id: skill.watchers
+    kind: skill
+    name: "Watchers"
+    summary: "Poll RSS feeds, JSON APIs and GitHub with de-duplication."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [devops, manager]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/devops/watchers, category: devops }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/devops/watchers
+  - id: skill.domain-intel
+    kind: skill
+    name: "Domain intel"
+    summary: "Passive recon: subdomains, TLS certificates, WHOIS and DNS."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [devops]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/research/domain-intel, category: research }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/research/domain-intel
+  - id: skill.simple-english
+    kind: skill
+    name: "Simple English"
+    summary: "Rewrite text in Simplified Technical English for clear answers."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [support]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/creative/simple-english, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/creative/simple-english
+  - id: skill.rss-feeds
+    kind: skill
+    name: "RSS feeds"
+    summary: "Read RSS, Atom and JSON feeds and find the feed behind a page."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [support, designer-marketer, manager]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/research/rss-feeds, category: research }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/research/rss-feeds
+  - id: skill.reddit-reading
+    kind: skill
+    name: "Reddit reading"
+    summary: "Read subreddits, searches, threads and users without a browser."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [support, designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/social-media/reddit-reading, category: social-media }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/social-media/reddit-reading
+  - id: skill.claude-design
+    kind: skill
+    name: "Claude design"
+    summary: "Design one-off HTML artifacts: landing pages, decks, prototypes."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: skills/creative/claude-design, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/creative/claude-design
+  - id: skill.baoyu-infographic
+    kind: skill
+    name: "Infographics"
+    summary: "Infographics in many layouts and styles."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: skills/creative/baoyu-infographic, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/creative/baoyu-infographic
+  - id: skill.popular-web-designs
+    kind: skill
+    name: "Popular web designs"
+    summary: "Real-world design systems reproduced as HTML/CSS references."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer, developer]
+    install:
+      skill: { source: hermes-builtin, path: skills/creative/popular-web-designs, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/creative/popular-web-designs
+  - id: skill.youtube-content
+    kind: skill
+    name: "YouTube content"
+    summary: "Turn YouTube transcripts into summaries, threads and blog posts."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: skills/media/youtube-content, category: media }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/media/youtube-content
+  - id: skill.excalidraw
+    kind: skill
+    name: "Excalidraw"
+    summary: "Hand-drawn style diagrams as Excalidraw JSON."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer, developer, manager]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/creative/excalidraw, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/creative/excalidraw
+  - id: skill.concept-diagrams
+    kind: skill
+    name: "Concept diagrams"
+    summary: "Flat, minimal explanatory SVG visuals."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/creative/concept-diagrams, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/creative/concept-diagrams
+  - id: skill.social-media-content-calendar
+    kind: skill
+    name: "Social content calendar"
+    summary: "Plan multi-platform social campaigns from brief to posting."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/creative/social-media-content-calendar, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/creative/social-media-content-calendar
+  - id: skill.design-md
+    kind: skill
+    name: "DESIGN.md"
+    summary: "Author, validate and export DESIGN.md design-token files."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/creative/design-md, category: creative }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/creative/design-md
+  - id: skill.impeccable
+    kind: skill
+    name: "Impeccable"
+    summary: "Frontend design guidance for polished interfaces."
+    source: [curated, hermes]
+    tier: T0
+    licence: Apache-2.0
+    roles: [designer-marketer, developer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/creative/impeccable, category: creative }
+    targets: [hermes, claude]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/creative/impeccable
+  - id: skill.creative-ideation
+    kind: skill
+    name: "Creative ideation"
+    summary: "Generate ideas with named methods from creative practice."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [designer-marketer]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/creative/creative-ideation, category: creative }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/creative/creative-ideation
+  - id: skill.hermes-agent
+    kind: skill
+    name: "Hermes agent"
+    summary: "Use, configure and extend Hermes itself."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: hermes-builtin, path: skills/autonomous-ai-agents/hermes-agent, category: autonomous-ai-agents }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/autonomous-ai-agents/hermes-agent
+  - id: skill.mcp-oauth-remote-gateway
+    kind: skill
+    name: "MCP OAuth on a headless box"
+    summary: "Complete OAuth for remote MCP servers when no local browser is available."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/mcp/mcp-oauth-remote-gateway, category: mcp }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/mcp/mcp-oauth-remote-gateway
+  - id: skill.llm-wiki
+    kind: skill
+    name: "LLM wiki"
+    summary: "Build and query an interlinked markdown knowledge base."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [manager, data]
+    install:
+      skill: { source: hermes-builtin, path: optional-skills/research/llm-wiki, category: research }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/optional-skills/research/llm-wiki
+  - id: skill.arxiv
+    kind: skill
+    name: "arXiv"
+    summary: "Search arXiv papers by keyword, author, category or id."
+    source: [curated, hermes]
+    tier: T0
+    licence: MIT
+    roles: [data]
+    install:
+      skill: { source: hermes-builtin, path: skills/research/arxiv, category: research }
+    targets: [hermes]
+    pinned_version: v0.23.3
+    homepage: https://github.com/NousResearch/hermes-agent/tree/v0.23.3/skills/research/arxiv

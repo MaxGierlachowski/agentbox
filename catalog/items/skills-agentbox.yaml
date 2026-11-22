@@ -1,0 +1,107 @@
+# Skills shipped in this repo (catalog/skills/). They drive the box only through
+# `agentbox api <procedure> --json '<input>'`. All are part of the base bundle.
+items:
+  - id: skill.agentbox-onboard
+    kind: skill
+    name: "Agentbox onboarding"
+    summary: "Set up or re-run the box setup by chatting: roles, toolkit, accounts, repos, agents."
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: agentbox, path: catalog/skills/agentbox-onboard, category: agentbox }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://github.com/MaxGierlachowski/agentbox/tree/main/catalog/skills/agentbox-onboard
+  - id: skill.agentbox-add-tool
+    kind: skill
+    name: "Agentbox: add a tool"
+    summary: "Find, install or remove catalog skills, MCP servers and CLIs."
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: agentbox, path: catalog/skills/agentbox-add-tool, category: agentbox }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://github.com/MaxGierlachowski/agentbox/tree/main/catalog/skills/agentbox-add-tool
+  - id: skill.agentbox-auth-cli
+    kind: skill
+    name: "Agentbox: CLI login"
+    summary: "Sign gh or glab in with a device code and check CLI logins."
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: agentbox, path: catalog/skills/agentbox-auth-cli, category: agentbox }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://github.com/MaxGierlachowski/agentbox/tree/main/catalog/skills/agentbox-auth-cli
+  - id: skill.agentbox-ssh
+    kind: skill
+    name: "Agentbox: SSH key"
+    summary: "Create the box's SSH key and register it with GitHub or GitLab."
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: agentbox, path: catalog/skills/agentbox-ssh, category: agentbox }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://github.com/MaxGierlachowski/agentbox/tree/main/catalog/skills/agentbox-ssh
+  - id: skill.agentbox-repo-setup
+    kind: skill
+    name: "Agentbox: repo setup"
+    summary: "Clone repos into ~/work, install dependencies, run tests, write AGENTS.md."
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: agentbox, path: catalog/skills/agentbox-repo-setup, category: agentbox }
+    targets: [hermes, claude]
+    pinned_version: null
+    homepage: https://github.com/MaxGierlachowski/agentbox/tree/main/catalog/skills/agentbox-repo-setup
+  - id: skill.agentbox-make-agent
+    kind: skill
+    name: "Agentbox: make an agent"
+    summary: "Create a Hermes agent profile with a SOUL and a scoped toolset."
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: agentbox, path: catalog/skills/agentbox-make-agent, category: agentbox }
+    targets: [hermes]
+    pinned_version: null
+    homepage: https://github.com/MaxGierlachowski/agentbox/tree/main/catalog/skills/agentbox-make-agent
+  - id: skill.agentbox-doctor
+    kind: skill
+    name: "Agentbox doctor"
+    summary: "Diagnose and fix services, MCP connections, logins, SSH, browser and disk."
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: agentbox, path: catalog/skills/agentbox-doctor, category: agentbox }
+    targets: [hermes, claude]
+    pinned_version: null
+    homepage: https://github.com/MaxGierlachowski/agentbox/tree/main/catalog/skills/agentbox-doctor
+  - id: skill.agentbox-browser
+    kind: skill
+    name: "Agentbox: shared browser"
+    summary: "Use the shared logged-in Chrome over CDP 9333: own tabs only, respect the lock."
+    source: [curated]
+    tier: T0
+    licence: MIT
+    roles: []
+    install:
+      skill: { source: agentbox, path: catalog/skills/agentbox-browser, category: agentbox }
+    targets: [hermes, claude]
+    pinned_version: null
+    homepage: https://github.com/MaxGierlachowski/agentbox/tree/main/catalog/skills/agentbox-browser

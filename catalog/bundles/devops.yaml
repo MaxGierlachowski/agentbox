@@ -1,0 +1,59 @@
+id: devops
+name: DevOps / SRE
+description: Health checks, alert and error triage, containers, Kubernetes and cloud, read-only by default.
+roles: [devops]
+skills:
+  - skill.docker-management
+  - skill.systematic-debugging
+  - skill.watchers
+  - skill.domain-intel
+  - skill.architecture-diagram
+  - skill.github
+mcps:
+  - mcp.github
+  - mcp.sentry
+  - mcp.aws-knowledge
+  - mcp.grafana
+  - mcp.grafana-cloud
+  - mcp.kubernetes
+  - mcp.aws-api
+  - mcp.cloudflare
+clis:
+  - cli.gh
+  - cli.jq
+  - cli.ripgrep
+  - cli.docker
+  - cli.kubectl
+  - cli.aws
+  - cli.gcloud
+  - cli.terraform
+opt_in:
+  - mcp.grafana
+  - mcp.grafana-cloud
+  - mcp.kubernetes
+  - mcp.aws-api
+  - mcp.cloudflare
+  - cli.kubectl
+  - cli.aws
+  - cli.gcloud
+  - cli.terraform
+soul_role: ops
+first_task: >-
+  Run a health check of this box - services, disk, listening ports and pending security updates -
+  and tell me what to fix first. Change nothing.
+first_task_alternatives:
+  - Group the Sentry issues of the last 24 hours by likely cause and rank them by impact.
+  - Review the Dockerfile and CI config of one of my repos and suggest hardening steps.
+  - Check the TLS certificates of the domains I list and tell me which expire within 30 days.
+suggested_sites:
+  - { name: GitHub, url: "https://github.com/login" }
+  - { name: Sentry, url: "https://sentry.io/auth/login/" }
+  - { name: Grafana Cloud, url: "https://grafana.com/auth/sign-in" }
+suggested_crons:
+  - name: error-digest
+    schedule: "0 8 * * *"
+    prompt: >-
+      Summarize new and regressed Sentry issues from the last 24 hours, grouped by likely cause,
+      highest impact first. Do not resolve or assign anything.
+    deliver: home
+    enabled: false

@@ -1,0 +1,57 @@
+id: developer
+name: Developer
+description: Code review, debugging, TDD and GitHub/GitLab work, with coding delegated to Paseo agents.
+roles: [developer]
+skills:
+  - skill.github
+  - skill.systematic-debugging
+  - skill.test-driven-development
+  - skill.requesting-code-review
+  - skill.simplify-code
+  - skill.spike
+  - skill.codebase-inspection
+  - skill.claude-code
+  - skill.frontend-design
+  - skill.webapp-testing
+  - skill.ast-grep
+mcps:
+  - mcp.github
+  - mcp.context7
+  - mcp.deepwiki
+  - mcp.playwright
+  - mcp.postgres
+  - mcp.sentry
+  - mcp.gitlab
+clis:
+  - cli.gh
+  - cli.glab
+  - cli.jq
+  - cli.ripgrep
+  - cli.docker
+opt_in:
+  - skill.webapp-testing
+  - skill.ast-grep
+  - mcp.playwright
+  - mcp.postgres
+  - mcp.sentry
+  - mcp.gitlab
+  - cli.docker
+soul_role: developer
+first_task: >-
+  Clone one of my repos and have a Paseo agent summarize its architecture and open TODOs.
+first_task_alternatives:
+  - Review my open pull requests on GitHub and summarize the risks and missing tests of each.
+  - Set up one of my repos on this box - install dependencies, run the tests and write an AGENTS.md if it has none.
+  - List the GitHub issues assigned to me and suggest which three to tackle first, with reasons.
+suggested_sites:
+  - { name: GitHub, url: "https://github.com/login" }
+  - { name: GitLab, url: "https://gitlab.com/users/sign_in" }
+suggested_crons:
+  - name: review-queue
+    schedule: "0 9 * * 1-5"
+    prompt: >-
+      List the open pull requests that wait for my review across my GitHub repos, oldest first,
+      with one line on what each changes. Do not comment or approve.
+    deliver: home
+    skills: [skill.github]
+    enabled: false

@@ -18,6 +18,7 @@
     "format": "biome check --write .",
     "compile": "turbo compile",
     "boundaries": "depcruise apps packages --config .dependency-cruiser.cjs",
+    "catalog:validate": "bun scripts/catalog-validate.ts",
     "prepare": "lefthook install || true"
   },
   "devDependencies": {
@@ -27,7 +28,8 @@
     "lefthook": "^1",
     "marked": "^16",
     "turbo": "^2.9.18",
-    "typescript": "^5.9"
+    "typescript": "^5.9",
+    "yaml": "^2"
   },
   "//trustedDependencies": "Empty on purpose: blocks Bun's default-trusted install scripts (ssh2, cpu-features). Their native modules crash compiled Bun binaries.",
   "trustedDependencies": []

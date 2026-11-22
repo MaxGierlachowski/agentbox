@@ -1,0 +1,40 @@
+id: data
+name: Data / Analyst
+description: SQL and file analysis with DuckDB and read-only Postgres, notebooks and dashboards.
+roles: [data]
+skills:
+  - skill.jupyter-notebook
+  - skill.live-dashboard
+  - skill.python-debugpy
+  - skill.microsoft-office
+  - skill.arxiv
+mcps:
+  - mcp.duckdb
+  - mcp.postgres
+  - mcp.posthog
+  - mcp.mixpanel
+  - mcp.google-analytics
+  - mcp.grafana
+clis:
+  - cli.uv
+  - cli.duckdb
+  - cli.psql
+  - cli.jq
+  - cli.gcloud
+opt_in:
+  - skill.arxiv
+  - mcp.posthog
+  - mcp.mixpanel
+  - mcp.google-analytics
+  - mcp.grafana
+  - cli.gcloud
+soul_role: data
+first_task: >-
+  Download a small public dataset (for example a CSV from data.gov) into ~/work/data, load it
+  into DuckDB and tell me what is in it and five questions it could answer.
+first_task_alternatives:
+  - Connect to my Postgres database read-only and explain the schema of its ten largest tables.
+  - Profile the CSV file I upload next - columns, types, missing values and outliers.
+  - Build a small self-updating dashboard for a metric I name, and show me the query behind it.
+suggested_sites:
+  - { name: Google Cloud console, url: "https://console.cloud.google.com/" }
