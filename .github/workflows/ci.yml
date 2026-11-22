@@ -21,6 +21,9 @@ jobs:
         with:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
+      - name: Playwright browser (UI tests)
+        working-directory: e2e
+        run: bunx playwright install --with-deps chromium
       - name: Biome
         run: bunx biome ci .
       - name: Module boundaries
