@@ -19,7 +19,6 @@ export function RunsTable({ runs }: { runs: RunSummary[] }) {
       <TableHeader>
         <TableRow>
           <TableHead>Run</TableHead>
-          <TableHead>Kind</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Actor</TableHead>
           <TableHead className="text-right">Started</TableHead>
@@ -28,12 +27,15 @@ export function RunsTable({ runs }: { runs: RunSummary[] }) {
       <TableBody>
         {runs.map((run) => (
           <TableRow key={run.id}>
-            <TableCell className="font-mono text-xs">
-              <Link href={`/runs/?id=${run.id}`} className="underline-offset-4 hover:underline">
-                {run.id.slice(0, 8)}
+            <TableCell>
+              <Link
+                href={`/runs/?id=${run.id}`}
+                className="font-medium underline-offset-4 hover:underline"
+              >
+                {run.title}
               </Link>
+              <span className="ml-2 font-mono text-muted-foreground text-xs">{run.kind}</span>
             </TableCell>
-            <TableCell>{run.kind}</TableCell>
             <TableCell>
               <StatusBadge status={run.status} />
             </TableCell>

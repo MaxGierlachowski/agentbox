@@ -3,7 +3,7 @@ import { RPCLink } from "@orpc/client/fetch"
 import { ClientRetryPlugin, type ClientRetryPluginContext } from "@orpc/client/plugins"
 import type { ContractRouterClient } from "@orpc/contract"
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
-import type { Contract } from "@workspace/contract"
+import type { ContractNext } from "./contract-next"
 
 const link = new RPCLink<ClientRetryPluginContext>({
   url: () => `${window.location.origin}/api/rpc`,
@@ -11,7 +11,7 @@ const link = new RPCLink<ClientRetryPluginContext>({
   plugins: [new ClientRetryPlugin({ default: { retry: 0 } })],
 })
 
-export const client: ContractRouterClient<Contract, ClientRetryPluginContext> =
+export const client: ContractRouterClient<ContractNext, ClientRetryPluginContext> =
   createORPCClient(link)
 
 export const orpc = createTanstackQueryUtils(client)
