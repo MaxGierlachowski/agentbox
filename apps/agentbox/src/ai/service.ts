@@ -233,10 +233,20 @@ export class AiService {
     await this.deps.secrets.set(`ai.${provider}_api_key`, trimmed, "api_key")
     this.deps.runs.setRedactions(this.deps.secrets.values())
     await this.deps.hermes.authAddApiKey(provider, trimmed)
+    // Without a Claude subscription, Paseo's Claude Code agents use the API key.
+    if (provider === "anthropic") await this.setPaseoClaudeKey(trimmed)
     return { ok: true, message: res.ok ? null : `Saved (provider answered ${res.status})` }
   }
 
+  private async setPaseoClaudeKey(key: string | null) {
+    await this.deps.paseo.setProviderEnv("claude", { ANTHROPIC_API_KEY: key })
+    await exec(["/usr/local/bin/paseo", "daemon", "reload", "--home", this.deps.paseo.paseoHome], {
+      timeoutMs: 30_000,
+    })
+  }
+
   async removeApiKey(provider: ApiKeyProvider) {
+    if (provider === "anthropic") await this.setPaseoClaudeKey(null).catch(() => undefined)
     const deleted = await this.deps.secrets.delete(`ai.${provider}_api_key`)
     await this.deps.hermes.run(["auth", "remove", provider]).catch(() => null)
     return { ok: deleted }

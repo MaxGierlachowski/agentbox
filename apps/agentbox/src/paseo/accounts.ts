@@ -90,4 +90,20 @@ export class PaseoConfig {
     delete providers[id]
     await this.write({ ...config, agents: { ...agents, providers } })
   }
+
+  /** Sets env vars on a provider entry (e.g. ANTHROPIC_API_KEY on the built-in `claude`). */
+  async setProviderEnv(id: string, env: Record<string, string | null>) {
+    const config = this.read()
+    const agents = (config.agents ?? {}) as Json
+    const providers = { ...((agents.providers ?? {}) as Record<string, Json>) }
+    const entry = { ...(providers[id] ?? {}) }
+    const nextEnv = { ...((entry.env as Record<string, string>) ?? {}) }
+    for (const [k, v] of Object.entries(env)) {
+      if (v === null) delete nextEnv[k]
+      else nextEnv[k] = v
+    }
+    entry.env = nextEnv
+    providers[id] = entry
+    await this.write({ ...config, agents: { ...agents, providers } })
+  }
 }
