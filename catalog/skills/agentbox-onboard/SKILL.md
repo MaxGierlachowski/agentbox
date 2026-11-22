@@ -39,11 +39,12 @@ the user in one sentence and stop that step. Procedures without input take `--js
    data, devops, support, designer-marketer, custom. Ask for one sentence about their work, and
    their timezone and language if `onboarding.get` does not have them.
 
-3. **Pick the toolkit.** For each role, find its bundle with
-   `catalog.search {"q": "<role>", "kind": "bundle"}` and read it with
-   `catalog.get {"id": "<bundle id>"}`. The `base` bundle is always included. Merge the bundles'
-   `skills`, `mcps` and `clis`; leave ids listed in `opt_in` unticked unless the user's sentence
-   asks for them. Use the user's sentence to suggest at most a few extra items
+3. **Pick the toolkit.** Get the merged role bundles with
+   `catalog.suggest {"roles": ["<role>", …], "about": "<their sentence>"}`. It returns the
+   preselected `selection` (skills, MCP servers, CLIs; the `base` bundle is always included),
+   the first task, and in `items` also the optional ones (`reason` starts with "Optional"): leave
+   those unticked unless the user's sentence asks for them. Use the user's sentence to suggest at
+   most a few extra items
    (`catalog.search {"q": "..."}`); only suggest ids that the catalog returns.
    Present the result as three short lists (skills, MCP servers, CLIs) with one line each, and
    mark items that need an account or key.

@@ -245,10 +245,18 @@ export const ProfileDraft = z.object({
   purpose: z.string(),
   skills: z.array(z.string()),
   mcps: z.array(z.string()),
-  crons: z.array(
-    z.object({ name: z.string(), schedule: z.string(), prompt: z.string(), enabled: z.boolean() }),
-  ),
-  soul: z.string(),
+  crons: z
+    .array(
+      z.object({
+        name: z.string(),
+        schedule: z.string(),
+        prompt: z.string(),
+        enabled: z.boolean(),
+      }),
+    )
+    .default([]),
+  /** Empty: composed from the role template. */
+  soul: z.string().default(""),
 })
 export type ProfileDraft = z.infer<typeof ProfileDraft>
 
