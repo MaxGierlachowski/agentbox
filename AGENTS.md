@@ -4,6 +4,7 @@ An agent box on a single VM. A Bun binary installs and wires Hermes, Hermes UI, 
 paseo-multi-account, hermes-paseo-bridge), a streamed Chrome, Caddy and one iroh gateway, and serves
 the embedded Next.js config UI through Hono. The plan lives in `docs/plan/00-master-plan.md`,
 contracts between repos in `docs/plan/v1-interfaces.md`, decisions in `docs/adr/`.
+Continuing the project on a new machine or in a new session: start with `docs/HANDOFF.md`.
 
 ## Layout
 
